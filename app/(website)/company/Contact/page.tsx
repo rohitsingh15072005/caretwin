@@ -1,8 +1,9 @@
+import SupportPage from "@/app/dashboard/support/page";
 
 export default function ContactPage() {
   return (
     <main>
-      <h1>Contact Us</h1>
+      <SupportPage />
     </main>
   );
 }
