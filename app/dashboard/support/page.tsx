@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Search,
   Bell,
@@ -19,9 +20,13 @@ import {
   Clock3,
   MapPin,
   Share2,
+  ArrowLeft,
 } from "lucide-react";
 
+
 export default function SupportPage() {
+  const router = useRouter();
+
   const [search, setSearch] = useState("");
 
   const [form, setForm] = useState({
@@ -124,11 +129,17 @@ export default function SupportPage() {
 
         <div className="ml-auto flex items-center gap-7">
 
-          <button className="text-slate-700 hover:text-cyan-700">
+          <button
+            type="button"
+            className="text-slate-700 hover:text-cyan-700"
+          >
             <Bell size={21} />
           </button>
 
-          <button className="text-slate-700 hover:text-cyan-700">
+          <button
+            type="button"
+            className="text-slate-700 hover:text-cyan-700"
+          >
             <Settings size={21} />
           </button>
 
@@ -144,93 +155,11 @@ export default function SupportPage() {
 
       </header>
 
-
       {/* =====================================================
           MAIN LAYOUT
       ===================================================== */}
 
       <div className="flex">
-
-
-        {/* ===================================================
-            SIDEBAR
-        =================================================== */}
-
-        <aside className="w-55.75 min-h-[calc(100vh-70px)] bg-[#F1F3FF] border-r border-slate-200 flex flex-col">
-
-          <nav className="p-4 space-y-2">
-
-            <SidebarItem
-              icon={<LayoutDashboard size={20} />}
-              label="Dashboard"
-            />
-
-            <SidebarItem
-              icon={<FileText size={20} />}
-              label="Medical Records"
-            />
-
-            <SidebarItem
-              icon={<Stethoscope size={20} />}
-              label="Symptom Checker"
-            />
-
-            <SidebarItem
-              icon={<Bot size={20} />}
-              label="Health Assistant"
-            />
-
-            <SidebarItem
-              icon={<Info size={20} />}
-              label="About Us"
-            />
-
-            <SidebarItem
-              icon={<Settings size={20} />}
-              label="Settings"
-            />
-
-            {/* Active */}
-
-            <div className="flex items-center gap-4 px-4 py-3 rounded-lg bg-[#61F38D] text-[#075E35] cursor-pointer">
-
-              <CircleHelp size={20} />
-
-              <span className="text-sm font-medium">
-                Support
-              </span>
-
-            </div>
-
-          </nav>
-
-
-          {/* Sidebar bottom */}
-
-          <div className="mt-auto border-t border-slate-200 p-4">
-
-            <div className="flex items-center gap-3">
-
-              <div className="w-9 h-9 rounded-full bg-[#0075A8] text-white flex items-center justify-center font-semibold">
-                CT
-              </div>
-
-              <div>
-                <p className="font-medium text-sm text-[#006B9C]">
-                  CareTwin
-                </p>
-
-                <p className="text-xs text-slate-500">
-                  Human-Centric Intelligence
-                </p>
-              </div>
-
-            </div>
-
-          </div>
-
-        </aside>
-
 
         {/* ===================================================
             PAGE CONTENT
@@ -242,9 +171,20 @@ export default function SupportPage() {
               HERO / SEARCH SECTION
           ================================================= */}
 
-          <section className="bg-[#E9EDFF] px-8 md:px-12 py-16">
+          <section className="bg-[#E9EDFF] px-8 md:px-12 py-10">
 
             <div className="max-w-225 mx-auto">
+
+              {/* Back to Dashboard */}
+
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard")}
+                className="flex items-center gap-2 text-slate-600 hover:text-cyan-700 transition font-medium mb-8"
+              >
+                <ArrowLeft size={20} />
+                <span>Back to Dashboard</span>
+              </button>
 
               <h2 className="text-4xl md:text-5xl font-bold text-center text-slate-900">
                 How can we help you today?
@@ -254,7 +194,6 @@ export default function SupportPage() {
                 Search our knowledge base or browse categories below to find
                 answers.
               </p>
-
 
               {/* Large search */}
 
@@ -279,7 +218,6 @@ export default function SupportPage() {
 
           </section>
 
-
           {/* =================================================
               BROWSE TOPICS
           ================================================= */}
@@ -292,7 +230,6 @@ export default function SupportPage() {
                 Browse Topics
               </h2>
 
-
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
                 {topics.map((topic) => {
@@ -301,6 +238,7 @@ export default function SupportPage() {
 
                   return (
                     <button
+                      type="button"
                       key={topic.title}
                       className="text-left bg-[#FAF9FF] border border-slate-200 rounded-xl p-5 hover:shadow-md hover:-translate-y-1 transition duration-200"
                     >
@@ -330,7 +268,6 @@ export default function SupportPage() {
 
           </section>
 
-
           {/* =================================================
               CONTACT SECTION
           ================================================= */}
@@ -343,13 +280,9 @@ export default function SupportPage() {
                 Contact Us
               </h2>
 
-
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
 
-
-                {/* =========================================
-                    CONTACT FORM
-                ========================================= */}
+                {/* CONTACT FORM */}
 
                 <form
                   onSubmit={handleSubmit}
@@ -379,7 +312,6 @@ export default function SupportPage() {
 
                   </div>
 
-
                   {/* Email */}
 
                   <div className="mb-4">
@@ -402,7 +334,6 @@ export default function SupportPage() {
                     />
 
                   </div>
-
 
                   {/* Subject */}
 
@@ -427,7 +358,6 @@ export default function SupportPage() {
 
                   </div>
 
-
                   {/* Message */}
 
                   <div className="mb-5">
@@ -451,7 +381,6 @@ export default function SupportPage() {
 
                   </div>
 
-
                   <button
                     type="submit"
                     className="w-full h-11 rounded-lg bg-[#006D9F] text-white font-semibold hover:bg-[#005D89] transition"
@@ -461,10 +390,7 @@ export default function SupportPage() {
 
                 </form>
 
-
-                {/* =========================================
-                    DIRECT SUPPORT
-                ========================================= */}
+                {/* DIRECT SUPPORT */}
 
                 <div className="flex flex-col justify-center">
 
@@ -476,7 +402,6 @@ export default function SupportPage() {
                     Our team is here to help you with any technical or
                     medical record inquiries.
                   </p>
-
 
                   {/* Email */}
 
@@ -498,7 +423,6 @@ export default function SupportPage() {
 
                   </div>
 
-
                   {/* Hours */}
 
                   <div className="flex items-center gap-4 mt-5">
@@ -518,7 +442,6 @@ export default function SupportPage() {
                     </div>
 
                   </div>
-
 
                   {/* Location */}
 
@@ -540,7 +463,6 @@ export default function SupportPage() {
 
                   </div>
 
-
                   {/* Social */}
 
                   <div className="mt-7">
@@ -551,11 +473,17 @@ export default function SupportPage() {
 
                     <div className="flex gap-4 mt-3">
 
-                      <button className="text-cyan-700 hover:text-cyan-900">
+                      <button
+                        type="button"
+                        className="text-cyan-700 hover:text-cyan-900"
+                      >
                         <Share2 size={21} />
                       </button>
 
-                      <button className="text-cyan-700 hover:text-cyan-900">
+                      <button
+                        type="button"
+                        className="text-cyan-700 hover:text-cyan-900"
+                      >
                         <Share2 size={21} />
                       </button>
 
@@ -570,7 +498,6 @@ export default function SupportPage() {
             </div>
 
           </section>
-
 
           {/* =================================================
               FOOTER
@@ -627,7 +554,6 @@ export default function SupportPage() {
     </div>
   );
 }
-
 
 /* ============================================================
    SIDEBAR ITEM
