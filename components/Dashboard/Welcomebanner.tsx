@@ -1,4 +1,25 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { getCurrentUser } from "@/lib/api";
+
 export default function WelcomeBanner() {
+  const [userName, setUserName] = useState("Patient");
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const user = await getCurrentUser();
+        if (user && user.full_name) {
+          setUserName(user.full_name.split(" ")[0]);
+        }
+      } catch (err) {
+        console.error("Failed to load user name:", err);
+      }
+    }
+    fetchUser();
+  }, []);
+
   return (
     <section className="relative overflow-hidden rounded-2xl bg-[#121b32] px-7 py-7 text-white">
       
@@ -16,15 +37,15 @@ export default function WelcomeBanner() {
 
         {/* Heading */}
         <h1 className="text-[25px] font-bold leading-[1.15] tracking-[-0.5px] sm:text-[28px]">
-          Hello, Sarah! Your health
+          Hello, {userName}! Your health
           <br />
           summary is up to date.
         </h1>
 
         {/* Description */}
         <p className="mt-2 max-w-[520px] text-[11px] leading-[17px] text-[#b9c4d8]">
-          AI detected 3 improvements in your sleep patterns since the last
-          sync. View your detailed medical report below.
+          CareTwin AI is continuously analyzing your health trends across visits.
+          Upload new lab reports or prescriptions to update your longitudinal records.
         </p>
 
       </div>

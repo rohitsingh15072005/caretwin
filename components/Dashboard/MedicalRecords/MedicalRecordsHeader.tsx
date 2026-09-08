@@ -2,7 +2,17 @@
 
 import { Filter, UploadCloud } from "lucide-react";
 
-export default function MedicalRecordsHeader() {
+interface MedicalRecordsHeaderProps {
+  onUploadClick?: () => void;
+  onFilterToggle?: () => void;
+  isFilterActive?: boolean;
+}
+
+export default function MedicalRecordsHeader({
+  onUploadClick,
+  onFilterToggle,
+  isFilterActive = false,
+}: MedicalRecordsHeaderProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 
@@ -22,7 +32,12 @@ export default function MedicalRecordsHeader() {
 
         <button
           type="button"
-          className="flex h-9 items-center gap-2 rounded-lg border border-[#dfe3ea] bg-white px-4 text-[10px] font-semibold text-[#374151] transition hover:bg-[#f8fafc]"
+          onClick={onFilterToggle}
+          className={`flex h-9 items-center gap-2 rounded-lg border px-4 text-[10px] font-semibold transition ${
+            isFilterActive
+              ? "bg-cyan-50 border-cyan-500 text-cyan-700"
+              : "border-[#dfe3ea] bg-white text-[#374151] hover:bg-[#f8fafc]"
+          }`}
         >
           <Filter size={13} />
           Filters
@@ -30,7 +45,8 @@ export default function MedicalRecordsHeader() {
 
         <button
           type="button"
-          className="flex h-9 items-center gap-2 rounded-lg bg-[#0878b8] px-4 text-[10px] font-semibold text-white transition hover:bg-[#06699f]"
+          onClick={onUploadClick}
+          className="flex h-9 items-center gap-2 rounded-lg bg-[#0878b8] px-4 text-[10px] font-semibold text-white transition hover:bg-[#06699f] active:scale-95 shadow-sm"
         >
           <UploadCloud size={14} />
           Upload New Report

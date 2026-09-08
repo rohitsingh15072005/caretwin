@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   CalendarDays,
   UserRound,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 
 interface MedicalRecordCardProps {
+  id?: number;
   type: string;
   title: string;
   description: string;
@@ -18,9 +20,13 @@ interface MedicalRecordCardProps {
   doctor: string;
   analyzed?: boolean;
   analysis?: string;
+  onView?: () => void;
+  onDownload?: () => void;
+  onDelete?: () => void;
 }
 
 export default function MedicalRecordCard({
+  id,
   type,
   title,
   description,
@@ -28,9 +34,14 @@ export default function MedicalRecordCard({
   doctor,
   analyzed = false,
   analysis,
+  onView,
+  onDownload,
+  onDelete,
 }: MedicalRecordCardProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
-    <article className="flex min-h-[242px] flex-col overflow-hidden rounded-xl border border-[#e1e5ee] bg-white">
+    <article className="flex min-h-[242px] flex-col overflow-hidden rounded-xl border border-[#e1e5ee] bg-white relative">
 
       {/* Card Header */}
       <div className="flex items-center justify-between border-b border-[#edf0f5] bg-[#fafbff] px-4 py-3">
@@ -39,12 +50,44 @@ export default function MedicalRecordCard({
           {type}
         </span>
 
-        <button
-          type="button"
-          className="text-[#8b95a7] hover:text-[#111827]"
-        >
-          <MoreVertical size={16} />
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="text-[#8b95a7] hover:text-[#111827] p-1 rounded transition"
+          >
+            <MoreVertical size={16} />
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 top-6 z-20 w-32 rounded-lg border border-slate-100 bg-white p-1 shadow-lg text-xs">
+              {onView && (
+                <button
+                  onClick={() => { setMenuOpen(false); onView(); }}
+                  className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-slate-700 hover:bg-slate-50 rounded"
+                >
+                  <Eye size={12} /> View
+                </button>
+              )}
+              {onDownload && (
+                <button
+                  onClick={() => { setMenuOpen(false); onDownload(); }}
+                  className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-slate-700 hover:bg-slate-50 rounded"
+                >
+                  <Download size={12} /> Download
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  onClick={() => { setMenuOpen(false); onDelete(); }}
+                  className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-red-600 hover:bg-red-50 rounded"
+                >
+                  <Trash2 size={12} /> Delete
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
       </div>
 
@@ -94,7 +137,8 @@ export default function MedicalRecordCard({
 
           <button
             type="button"
-            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-md border border-[#dfe3ea] text-[9px] font-semibold text-[#374151] transition hover:bg-[#f8fafc]"
+            onClick={onView}
+            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-md border border-[#dfe3ea] text-[10px] font-semibold text-[#374151] transition hover:bg-[#f8fafc] active:scale-95"
           >
             <Eye size={12} />
             View
@@ -102,16 +146,19 @@ export default function MedicalRecordCard({
 
           <button
             type="button"
-            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-md border border-[#dfe3ea] text-[9px] font-semibold text-[#374151] transition hover:bg-[#f8fafc]"
+            onClick={onDownload}
+            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-md border border-[#dfe3ea] text-[10px] font-semibold text-[#374151] transition hover:bg-[#f8fafc] active:scale-95"
           >
             <Download size={12} />
             Get PDF
           </button>
 
-          {analyzed && (
+          {onDelete && (
             <button
               type="button"
-              className="flex h-8 w-9 items-center justify-center rounded-md border border-[#f3b5b5] text-[#e55b5b] transition hover:bg-[#fff4f4]"
+              onClick={onDelete}
+              title="Delete record"
+              className="flex h-8 w-9 items-center justify-center rounded-md border border-[#f3b5b5] text-[#e55b5b] transition hover:bg-[#fff4f4] active:scale-95"
             >
               <Trash2 size={13} />
             </button>

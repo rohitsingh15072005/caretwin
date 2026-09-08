@@ -1,9 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getCurrentUser } from "@/lib/api";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("Profile");
+  const [user, setUser] = useState<{ full_name: string; email: string } | null>(null);
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const u = await getCurrentUser();
+        setUser(u);
+      } catch (err) {
+        console.error("Failed to load user settings:", err);
+      }
+    }
+    loadUser();
+  }, []);
+
+  const nameParts = user?.full_name ? user.full_name.split(" ") : ["User", ""];
+  const firstName = nameParts[0] || "User";
+  const lastName = nameParts.slice(1).join(" ") || "";
 
   return (
     <div className="min-h-screen bg-[#F5F7FF] p-6 md:p-10">
@@ -38,8 +56,8 @@ export default function SettingsPage() {
                 {item}
 
                 {activeTab === item && (
-                  <span className="float-right">
-                    →
+                  <span className="float-right text-xs bg-[#006B9F] text-white px-2 py-0.5 rounded-full">
+                    Active
                   </span>
                 )}
               </button>
@@ -48,24 +66,20 @@ export default function SettingsPage() {
           </div>
 
 
-          {/* Settings content */}
+          {/* Main content */}
 
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-200">
 
-            <div className="p-7 border-b border-slate-200">
+            <div className="p-8">
 
-              <h2 className="text-2xl font-bold text-slate-900">
-                Profile Information
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                Personal Information
               </h2>
 
-              <p className="text-slate-500 mt-2">
-                Update your account details and public profile.
+              <p className="text-slate-500 mb-8">
+                Manage your personal details and account settings.
               </p>
 
-            </div>
-
-
-            <div className="p-7">
 
               {/* Profile */}
 
@@ -87,11 +101,11 @@ export default function SettingsPage() {
 
                   <div className="flex gap-3 mt-3">
 
-                    <button className="px-4 py-2 rounded-lg bg-[#DCE8FA] text-[#006B9F]">
+                    <button className="px-4 py-2 rounded-lg bg-[#DCE8FA] text-[#006B9F] text-xs font-semibold">
                       Upload New
                     </button>
 
-                    <button className="px-4 py-2 text-red-600">
+                    <button className="px-4 py-2 text-red-600 text-xs font-semibold">
                       Remove
                     </button>
 
@@ -114,8 +128,9 @@ export default function SettingsPage() {
 
                   <input
                     type="text"
-                    defaultValue="Sarah"
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none focus:border-cyan-600"
+                    key={firstName}
+                    defaultValue={firstName}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none focus:border-cyan-600 text-sm"
                   />
 
                 </div>
@@ -129,8 +144,9 @@ export default function SettingsPage() {
 
                   <input
                     type="text"
-                    defaultValue="Jenkins"
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none focus:border-cyan-600"
+                    key={lastName}
+                    defaultValue={lastName}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none focus:border-cyan-600 text-sm"
                   />
 
                 </div>
@@ -148,8 +164,9 @@ export default function SettingsPage() {
 
                 <input
                   type="email"
-                  defaultValue="sarah.jenkins@example.com"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none focus:border-cyan-600"
+                  key={user?.email || "email"}
+                  defaultValue={user?.email || ""}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none focus:border-cyan-600 text-sm"
                 />
 
               </div>
@@ -161,11 +178,11 @@ export default function SettingsPage() {
 
             <div className="border-t border-slate-200 p-6 flex justify-end gap-3">
 
-              <button className="px-6 py-3 rounded-full border border-slate-300">
+              <button className="px-6 py-3 rounded-full border border-slate-300 text-sm">
                 Cancel
               </button>
 
-              <button className="px-7 py-3 rounded-full bg-[#006B9F] text-white font-semibold">
+              <button className="px-6 py-3 rounded-full bg-[#006B9F] hover:bg-[#00557f] text-white text-sm font-semibold transition">
                 Save Changes
               </button>
 

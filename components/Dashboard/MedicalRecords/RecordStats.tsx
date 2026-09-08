@@ -7,35 +7,47 @@ import {
   BellRing,
 } from "lucide-react";
 
-export default function RecordStats() {
+interface RecordStatsProps {
+  totalDocs?: number;
+  aiAnalyzed?: number;
+  lastUpdate?: string;
+  followUps?: number;
+}
+
+export default function RecordStats({
+  totalDocs = 0,
+  aiAnalyzed = 0,
+  lastUpdate = "No records yet",
+  followUps = 0,
+}: RecordStatsProps) {
   return (
     <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
 
       <StatCard
         icon={<FileText size={17} />}
         label="Total Documents"
-        value="24"
+        value={totalDocs.toString()}
         iconStyle="blue"
       />
 
       <StatCard
         icon={<Brain size={17} />}
         label="AI Analyzed"
-        value="18"
+        value={aiAnalyzed.toString()}
         iconStyle="green"
       />
 
       <StatCard
         icon={<Clock3 size={17} />}
         label="Last Update"
-        value="2 Days Ago"
+        value={lastUpdate}
         iconStyle="gray"
       />
 
       <StatCard
         icon={<BellRing size={17} />}
         label="Follow-ups"
-        value="3"
+        value={followUps.toString()}
         iconStyle="red"
       />
 
@@ -71,7 +83,7 @@ function StatCard({
       </div>
 
       <div>
-        <p className="text-[8px] font-semibold text-[#8b95a7]">
+        <p className="text-[10px] font-semibold text-[#8b95a7]">
           {label}
         </p>
 

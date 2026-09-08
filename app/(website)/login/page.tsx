@@ -2,23 +2,35 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { loginUser } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
- const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
 
-  if (!email.trim() || !password.trim()) {
-    alert("Please fill in all fields.");
-    return;
-  }
+    if (!email.trim() || !password.trim()) {
+      setError("Please fill in all fields.");
+      return;
+    }
 
-  router.push("/dashboard");
-};
+    try {
+      setLoading(true);
+      await loginUser(email.trim(), password.trim());
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
@@ -30,16 +42,20 @@ export default function LoginPage() {
           Welcome Back
         </h1>
 
-        <p className="text-center text-slate-500 mt-2 mb-8">
+        <p className="text-center text-slate-500 mt-2 mb-6">
           Sign in to your CareTwin account
         </p>
 
-        {/* Email */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm border border-red-200">
+            {error}
+          </div>
+        )}
 
+        {/* Email */}
         <label className="block text-sm font-medium text-slate-700 mb-2">
           Email Address
         </label>
-
         <input
           type="email"
           placeholder="Enter your email"
@@ -49,11 +65,9 @@ export default function LoginPage() {
         />
 
         {/* Password */}
-
         <label className="block text-sm font-medium text-slate-700 mb-2">
           Password
         </label>
-
         <input
           type="password"
           placeholder="Enter your password"
@@ -63,27 +77,15 @@ export default function LoginPage() {
         />
 
         {/* Login Button */}
-
         <button
           type="submit"
-          className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-3 rounded-xl font-semibold transition"
+          disabled={loading}
+          className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition"
         >
-          Login
+          {loading ? "Signing in..." : "Login"}
         </button>
 
-        {/* Forgot Password */}
-
-        <div className="text-center mt-4">
-          <button
-            type="button"
-            className="text-cyan-600 hover:underline"
-          >
-            Forgot Password?
-          </button>
-        </div>
-
-        {/* Signup */}
-
+        {/* Signup Link */}
         <p className="text-center mt-6 text-slate-500">
           Don't have an account?{" "}
           <button

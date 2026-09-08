@@ -27,15 +27,19 @@ export default function Hero() {
             </p>
 
             <div className="flex gap-5 mt-10">
+              <a
+                href="/signup"
+                className="bg-cyan-700 hover:bg-cyan-800 transition text-white px-8 py-4 rounded-xl font-semibold shadow-lg inline-block text-center"
+              >
+                Join CareTwin →
+              </a>
 
-              <button className="bg-cyan-700 hover:bg-cyan-800 transition text-white px-8 py-4 rounded-xl font-semibold shadow-lg">
-                Join MedBud →
-              </button>
-
-              <button className="border border-slate-300 hover:border-cyan-600 hover:text-cyan-600 transition px-8 py-4 rounded-xl font-semibold bg-white">
+              <a
+                href="/Platform/Features"
+                className="border border-slate-300 hover:border-cyan-600 hover:text-cyan-600 transition px-8 py-4 rounded-xl font-semibold bg-white inline-block text-center"
+              >
                 Explore Features
-              </button>
-
+              </a>
             </div>
 
           </div>
