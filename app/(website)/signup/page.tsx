@@ -62,7 +62,7 @@ export default function SignupPage() {
           placeholder="Full Name"
           value={form.name}
           onChange={handleChange}
-          className="w-full border rounded-xl p-3 mb-4 placeholder:text-grey-500"
+          className="w-full border rounded-xl p-3 mb-4 placeholder:text-gray-700"
         />
 
         <input
@@ -71,7 +71,7 @@ export default function SignupPage() {
           placeholder="Email Address"
           value={form.email}
           onChange={handleChange}
-          className="w-full border rounded-xl p-3 mb-4 placeholder:text-grey-500"
+          className="w-full border rounded-xl p-3 mb-4 placeholder:text-gray-700"
         />
 
         <input
@@ -80,7 +80,7 @@ export default function SignupPage() {
           placeholder="Password"
           value={form.password}
           onChange={handleChange}
-          className="w-full border rounded-xl p-3 mb-4 placeholder:text-grey-500"
+          className="w-full border rounded-xl p-3 mb-4 placeholder:text-gray-700"
         />
 
         <input
@@ -89,7 +89,7 @@ export default function SignupPage() {
           placeholder="Confirm Password"
           value={form.confirmPassword}
           onChange={handleChange}
-          className="w-full border rounded-xl p-3 mb-6 placeholder:text-grey-500" 
+          className="w-full border rounded-xl p-3 mb-6 placeholder:text-gray-700" 
         />
 
         <button

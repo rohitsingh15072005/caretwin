@@ -19,7 +19,7 @@ export default function Header() {
         <input
           type="text"
           placeholder="Search health records..."
-          className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          className="w-full pl-12 pr-4 py-3 placeholder:text-gray-500 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
 
       </div>
