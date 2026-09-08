@@ -62,7 +62,7 @@ export default function SignupPage() {
           placeholder="Full Name"
           value={form.name}
           onChange={handleChange}
-          className="w-full border rounded-xl p-3 mb-4"
+          className="w-full border rounded-xl p-3 mb-4 text-black"
         />
 
         <input
@@ -71,7 +71,7 @@ export default function SignupPage() {
           placeholder="Email Address"
           value={form.email}
           onChange={handleChange}
-          className="w-full border rounded-xl p-3 mb-4"
+          className="w-full border rounded-xl p-3 mb-4 text-black"
         />
 
         <input
@@ -80,7 +80,7 @@ export default function SignupPage() {
           placeholder="Password"
           value={form.password}
           onChange={handleChange}
-          className="w-full border rounded-xl p-3 mb-4"
+          className="w-full border rounded-xl p-3 mb-4 text-black"
         />
 
         <input
@@ -89,7 +89,7 @@ export default function SignupPage() {
           placeholder="Confirm Password"
           value={form.confirmPassword}
           onChange={handleChange}
-          className="w-full border rounded-xl p-3 mb-6"
+          className="w-full border rounded-xl p-3 mb-6 text-black "
         />
 
         <button

@@ -32,7 +32,7 @@ export default function Hero() {
                 Join MedBud →
               </button>
 
-              <button className="border border-slate-300 hover:border-cyan-600 hover:text-cyan-600 transition px-8 py-4 rounded-xl font-semibold bg-white">
+              <button className="border border-slate-300 text-black hover:border-cyan-600 hover:text-cyan-600 transition px-8 py-4 rounded-xl font-semibold bg-white">
                 Explore Features
               </button>
 
@@ -102,7 +102,7 @@ export default function Hero() {
                     Stress Level
                   </p>
 
-                  <h3 className="text-4xl font-bold mt-2">
+                  <h3 className="text-4xl text-black font-bold mt-2">
                     Low
                   </h3>
 
