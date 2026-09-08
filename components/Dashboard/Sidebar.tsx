@@ -61,7 +61,7 @@ export default function Sidebar() {
             fixed
             left-4
             top-4
-            z-[100]
+            z-100
             flex
             h-11
             w-11

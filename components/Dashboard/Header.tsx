@@ -9,7 +9,7 @@ export default function Header() {
 
       {/* Search Bar */}
 
-      <div className="relative w-[500px]">
+      <div className="relative w-125">
 
         <Search
           size={18}

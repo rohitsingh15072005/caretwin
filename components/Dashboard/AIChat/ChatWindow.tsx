@@ -21,7 +21,7 @@ export default function ChatWindow() {
       id: 1,
       sender: "ai",
       text:
-        "Hello Sarah! I'm CareTwin AI. I can help you understand your medical records, symptoms, medications, and general health information. How can I help you today?",
+        "Hello Rohit! I'm CareTwin AI. I can help you understand your medical records, symptoms, medications, and general health information. How can I help you today?",
     },
   ]);
 

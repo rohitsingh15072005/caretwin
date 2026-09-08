@@ -417,7 +417,7 @@ export default function SupportPage() {
                       </p>
 
                       <p className="text-sm text-slate-700">
-                        support@care-twin.com
+                        rohitsinghyt43@gmail.com
                       </p>
                     </div>
 
@@ -437,7 +437,7 @@ export default function SupportPage() {
                       </p>
 
                       <p className="text-sm text-slate-700">
-                        Mon - Fri: 8:00 AM - 6:00 PM EST
+                        Mon - Fri: 9:00 AM - 5:00 PM IST
                       </p>
                     </div>
 
@@ -457,7 +457,7 @@ export default function SupportPage() {
                       </p>
 
                       <p className="text-sm text-slate-700">
-                        123 Health Tech Plaza, Boston, MA
+                        Webel IT park, Kalyani, Nadia, West Bengal, India
                       </p>
                     </div>
 

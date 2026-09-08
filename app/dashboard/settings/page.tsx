@@ -109,7 +109,7 @@ export default function SettingsPage() {
 
                   <input
                     type="text"
-                    defaultValue="Sarah"
+                    defaultValue="Rohit"
                     className="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none focus:border-cyan-600 text-black"
                   />
                 </div>
@@ -121,7 +121,7 @@ export default function SettingsPage() {
 
                   <input
                     type="text"
-                    defaultValue="Jenkins"
+                    defaultValue="Singh"
                     className="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none focus:border-cyan-600 text-black"
                   />
                 </div>
@@ -137,7 +137,7 @@ export default function SettingsPage() {
 
                 <input
                   type="email"
-                  defaultValue="sarah.jenkins@example.com"
+                  defaultValue="rohitsinghyt43@gmail.com"
                   className="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none focus:border-cyan-600 text-black"
                 />
 

@@ -6,13 +6,13 @@ import AIChatSidebar from "../../../components/Dashboard/AIChat/AIChatSidebar";
 
 export default function AIChatPage() {
   return (
-    <div className="mx-auto w-full max-w-[1200px]">
+    <div className="mx-auto w-full max-w-300">
 
       {/* Header */}
       <AIChatHeader />
 
       {/* Chat Area */}
-      <div className="mt-5 grid min-h-[600px] grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
+      <div className="mt-5 grid min-h-150 grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
 
         {/* Main Chat */}
         <ChatWindow />
