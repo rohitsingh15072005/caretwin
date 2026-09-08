@@ -7,17 +7,17 @@ export default function Navbar() {
           CareTwin AI
         </h1>
 
-        <div className="flex gap-8 text-slate-700 ">
-          <Link href="/" className="px-4 py-2 hover:text-cyan-600 transition duration-300" >
+        <div className="flex gap-8  ">
+          <Link href="/" className="px-4 py-2 text-black hover:text-cyan-600 transition duration-300" >
             Home
           </Link>
-          <Link href="/Platform/Features" className="px-4 py-2 hover:text-cyan-600 transition duration-300" >
+          <Link href="/Platform/Features" className="px-4 py-2 text-black hover:text-cyan-600 transition duration-300" >
             Features
           </Link>
-          <Link href="/company/About" className="px-4 py-2 hover:text-cyan-600 transition duration-300" >
+          <Link href="/company/About" className="px-4 py-2 text-black hover:text-cyan-600 transition duration-300" >
             About
           </Link>
-          <Link href="/Legal/Faqs" className="px-4 py-2 hover:text-cyan-600 transition duration-300" >
+          <Link href="/Legal/Faqs" className="px-4 py-2 text-black hover:text-cyan-600 transition duration-300" >
             Faqs
           </Link>
         </div>
