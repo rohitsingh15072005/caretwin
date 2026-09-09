@@ -116,7 +116,7 @@ export default function ChatWindow() {
               )}
 
               <div
-                className={`max-w-[75%] rounded-xl px-4 py-3 ${
+                className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-4 py-3 ${
                   isAI
                     ? "rounded-tl-sm bg-white text-[#4b5563] shadow-sm"
                     : "rounded-tr-sm bg-[#0878b8] text-white"

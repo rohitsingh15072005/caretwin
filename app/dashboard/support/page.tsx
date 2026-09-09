@@ -23,7 +23,6 @@ import {
   ArrowLeft,
 } from "lucide-react";
 
-
 export default function SupportPage() {
   const router = useRouter();
 
@@ -96,19 +95,17 @@ export default function SupportPage() {
           TOP HEADER
       ===================================================== */}
 
-      <header className="h-17.5 bg-white border-b border-slate-200 flex items-center px-8">
+      <header className="flex min-h-[70px] items-center border-b border-slate-200 bg-white px-4 sm:px-6 md:px-8">
 
         {/* Logo */}
-
-        <div className="w-47.5 shrink-0">
-          <h1 className="text-2xl font-bold text-[#006B9C]">
+        <div className="w-auto shrink-0 sm:w-47.5">
+          <h1 className="text-xl font-bold text-[#006B9C] sm:text-2xl">
             CareTwin
           </h1>
         </div>
 
         {/* Search */}
-
-        <div className="relative w-63.75">
+        <div className="relative ml-3 min-w-0 flex-1 sm:ml-6 sm:max-w-63.75 md:ml-0">
 
           <Search
             size={17}
@@ -120,32 +117,32 @@ export default function SupportPage() {
             placeholder="Search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-9 pl-10 pr-4 rounded-full border border-slate-300 bg-[#F8F9FF] text-sm outline-none focus:border-cyan-600"
+            className="h-9 w-full rounded-full border border-slate-300 bg-[#F8F9FF] pl-10 pr-4 text-sm outline-none focus:border-cyan-600"
           />
 
         </div>
 
         {/* Header right */}
-
-        <div className="ml-auto flex items-center gap-7">
+        <div className="ml-3 flex shrink-0 items-center gap-3 sm:ml-auto sm:gap-5 md:gap-7">
 
           <button
             type="button"
             className="text-slate-700 hover:text-cyan-700"
+            aria-label="Notifications"
           >
-            <Bell size={21} />
+            <Bell size={20} />
           </button>
 
           <button
             type="button"
             className="text-slate-700 hover:text-cyan-700"
+            aria-label="Settings"
           >
-            <Settings size={21} />
+            <Settings size={20} />
           </button>
 
           {/* Profile */}
-
-          <div className="w-9 h-9 rounded-full border-2 border-slate-200 bg-cyan-100 flex items-center justify-center overflow-hidden">
+          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-slate-200 bg-cyan-100">
             <span className="text-sm font-semibold text-cyan-700">
               R
             </span>
@@ -165,39 +162,37 @@ export default function SupportPage() {
             PAGE CONTENT
         =================================================== */}
 
-        <main className="flex-1">
+        <main className="min-w-0 flex-1">
 
           {/* =================================================
               HERO / SEARCH SECTION
           ================================================= */}
 
-          <section className="bg-[#E9EDFF] px-8 md:px-12 py-10">
+          <section className="bg-[#E9EDFF] px-4 py-8 sm:px-8 sm:py-10 md:px-12">
 
-            <div className="max-w-225 mx-auto">
+            <div className="mx-auto max-w-225">
 
               {/* Back to Dashboard */}
-
               <button
                 type="button"
                 onClick={() => router.push("/dashboard")}
-                className="flex items-center gap-2 text-slate-600 hover:text-cyan-700 transition font-medium mb-8"
+                className="mb-6 flex items-center gap-2 font-medium text-slate-600 transition hover:text-cyan-700 sm:mb-8"
               >
                 <ArrowLeft size={20} />
                 <span>Back to Dashboard</span>
               </button>
 
-              <h2 className="text-4xl md:text-5xl font-bold text-center text-slate-900">
+              <h2 className="text-center text-3xl font-bold text-slate-900 sm:text-4xl md:text-5xl">
                 How can we help you today?
               </h2>
 
-              <p className="text-center text-lg text-slate-600 mt-3">
+              <p className="mt-3 text-center text-base text-slate-600 sm:text-lg">
                 Search our knowledge base or browse categories below to find
                 answers.
               </p>
 
               {/* Large search */}
-
-              <div className="relative mt-7">
+              <div className="relative mt-6 sm:mt-7">
 
                 <Search
                   size={21}
@@ -209,7 +204,7 @@ export default function SupportPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search for articles, guides, or keywords..."
-                  className="w-full h-14 pl-12 pr-5 rounded-xl border border-slate-300 bg-white text-base outline-none focus:border-cyan-600 focus:ring-2 focus:ring-cyan-100"
+                  className="h-12 w-full rounded-xl border border-slate-300 bg-white pl-12 pr-5 text-sm outline-none focus:border-cyan-600 focus:ring-2 focus:ring-cyan-100 sm:h-14 sm:text-base"
                 />
 
               </div>
@@ -222,15 +217,15 @@ export default function SupportPage() {
               BROWSE TOPICS
           ================================================= */}
 
-          <section className="bg-white px-8 md:px-12 py-10">
+          <section className="bg-white px-4 py-8 sm:px-8 sm:py-10 md:px-12">
 
-            <div className="max-w-225 mx-auto">
+            <div className="mx-auto max-w-225">
 
-              <h2 className="text-3xl font-bold text-slate-900 mb-6">
+              <h2 className="mb-6 text-2xl font-bold text-slate-900 sm:text-3xl">
                 Browse Topics
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
 
                 {topics.map((topic) => {
 
@@ -240,20 +235,20 @@ export default function SupportPage() {
                     <button
                       type="button"
                       key={topic.title}
-                      className="text-left bg-[#FAF9FF] border border-slate-200 rounded-xl p-5 hover:shadow-md hover:-translate-y-1 transition duration-200"
+                      className="rounded-xl border border-slate-200 bg-[#FAF9FF] p-5 text-left transition duration-200 hover:-translate-y-1 hover:shadow-md"
                     >
 
                       <div
-                        className={`w-11 h-11 rounded-lg ${topic.iconBg} ${topic.iconColor} flex items-center justify-center`}
+                        className={`flex h-11 w-11 items-center justify-center rounded-lg ${topic.iconBg} ${topic.iconColor}`}
                       >
                         <Icon size={23} />
                       </div>
 
-                      <h3 className="text-xl font-bold text-slate-900 mt-5">
+                      <h3 className="mt-5 text-xl font-bold text-slate-900">
                         {topic.title}
                       </h3>
 
-                      <p className="text-sm text-slate-600 leading-5 mt-2">
+                      <p className="mt-2 text-sm leading-5 text-slate-600">
                         {topic.description}
                       </p>
 
@@ -272,28 +267,27 @@ export default function SupportPage() {
               CONTACT SECTION
           ================================================= */}
 
-          <section className="bg-[#F0F2FF] px-8 md:px-12 py-10">
+          <section className="bg-[#F0F2FF] px-4 py-8 sm:px-8 sm:py-10 md:px-12">
 
-            <div className="max-w-225 mx-auto">
+            <div className="mx-auto max-w-225">
 
-              <h2 className="text-3xl font-bold text-slate-900 mb-6">
+              <h2 className="mb-6 text-2xl font-bold text-slate-900 sm:text-3xl">
                 Contact Us
               </h2>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
 
                 {/* CONTACT FORM */}
 
                 <form
                   onSubmit={handleSubmit}
-                  className="bg-white rounded-xl border border-slate-200 shadow-sm p-5"
+                  className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
                 >
 
                   {/* Name */}
-
                   <div className="mb-4">
 
-                    <label className="block text-sm font-medium text-slate-800 mb-1">
+                    <label className="mb-1 block text-sm font-medium text-slate-800">
                       Name
                     </label>
 
@@ -307,16 +301,15 @@ export default function SupportPage() {
                           name: e.target.value,
                         })
                       }
-                      className="w-full h-11 px-4 rounded-lg border border-slate-300 outline-none focus:border-cyan-600"
+                      className="h-11 w-full rounded-lg border border-slate-300 px-4 outline-none focus:border-cyan-600"
                     />
 
                   </div>
 
                   {/* Email */}
-
                   <div className="mb-4">
 
-                    <label className="block text-sm font-medium text-slate-800 mb-1">
+                    <label className="mb-1 block text-sm font-medium text-slate-800">
                       Email
                     </label>
 
@@ -330,16 +323,15 @@ export default function SupportPage() {
                           email: e.target.value,
                         })
                       }
-                      className="w-full h-11 px-4 rounded-lg border border-slate-300 outline-none focus:border-cyan-600"
+                      className="h-11 w-full rounded-lg border border-slate-300 px-4 outline-none focus:border-cyan-600"
                     />
 
                   </div>
 
                   {/* Subject */}
-
                   <div className="mb-4">
 
-                    <label className="block text-sm font-medium text-slate-800 mb-1">
+                    <label className="mb-1 block text-sm font-medium text-slate-800">
                       Subject
                     </label>
 
@@ -353,16 +345,15 @@ export default function SupportPage() {
                           subject: e.target.value,
                         })
                       }
-                      className="w-full h-11 px-4 rounded-lg border border-slate-300 outline-none focus:border-cyan-600"
+                      className="h-11 w-full rounded-lg border border-slate-300 px-4 outline-none focus:border-cyan-600"
                     />
 
                   </div>
 
                   {/* Message */}
-
                   <div className="mb-5">
 
-                    <label className="block text-sm font-medium text-slate-800 mb-1">
+                    <label className="mb-1 block text-sm font-medium text-slate-800">
                       Message
                     </label>
 
@@ -376,14 +367,14 @@ export default function SupportPage() {
                         })
                       }
                       rows={5}
-                      className="w-full px-4 py-3 rounded-lg border border-slate-300 outline-none resize-none focus:border-cyan-600"
+                      className="w-full resize-none rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-cyan-600"
                     />
 
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full h-11 rounded-lg bg-[#006D9F] text-white font-semibold hover:bg-[#005D89] transition"
+                    className="h-11 w-full rounded-lg bg-[#006D9F] font-semibold text-white transition hover:bg-[#005D89]"
                   >
                     Send Message
                   </button>
@@ -392,31 +383,30 @@ export default function SupportPage() {
 
                 {/* DIRECT SUPPORT */}
 
-                <div className="flex flex-col justify-center">
+                <div className="flex min-w-0 flex-col justify-center">
 
                   <h2 className="text-2xl font-bold text-slate-900">
                     Direct Support
                   </h2>
 
-                  <p className="text-slate-600 mt-2 leading-6">
+                  <p className="mt-2 leading-6 text-slate-600">
                     Our team is here to help you with any technical or
                     medical record inquiries.
                   </p>
 
                   {/* Email */}
+                  <div className="mt-7 flex min-w-0 items-center gap-4">
 
-                  <div className="flex items-center gap-4 mt-7">
-
-                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700">
                       <Mail size={19} />
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-medium text-slate-900">
                         Email Address
                       </p>
 
-                      <p className="text-sm text-slate-700">
+                      <p className="break-all text-sm text-slate-700">
                         rohitsinghyt43@gmail.com
                       </p>
                     </div>
@@ -424,14 +414,13 @@ export default function SupportPage() {
                   </div>
 
                   {/* Hours */}
+                  <div className="mt-5 flex min-w-0 items-center gap-4">
 
-                  <div className="flex items-center gap-4 mt-5">
-
-                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700">
                       <Clock3 size={19} />
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-medium text-slate-900">
                         Support Hours
                       </p>
@@ -444,14 +433,13 @@ export default function SupportPage() {
                   </div>
 
                   {/* Location */}
+                  <div className="mt-5 flex min-w-0 items-center gap-4">
 
-                  <div className="flex items-center gap-4 mt-5">
-
-                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700">
                       <MapPin size={19} />
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-medium text-slate-900">
                         Headquarters
                       </p>
@@ -464,18 +452,18 @@ export default function SupportPage() {
                   </div>
 
                   {/* Social */}
-
                   <div className="mt-7">
 
                     <p className="font-medium text-slate-900">
                       Follow Us
                     </p>
 
-                    <div className="flex gap-4 mt-3">
+                    <div className="mt-3 flex gap-4">
 
                       <button
                         type="button"
                         className="text-cyan-700 hover:text-cyan-900"
+                        aria-label="Social media"
                       >
                         <Share2 size={21} />
                       </button>
@@ -483,6 +471,7 @@ export default function SupportPage() {
                       <button
                         type="button"
                         className="text-cyan-700 hover:text-cyan-900"
+                        aria-label="Social media"
                       >
                         <Share2 size={21} />
                       </button>
@@ -503,15 +492,15 @@ export default function SupportPage() {
               FOOTER
           ================================================= */}
 
-          <footer className="bg-white border-t border-slate-300 px-8 py-6">
+          <footer className="border-t border-slate-300 bg-white px-4 py-6 sm:px-8">
 
-            <div className="max-w-275 mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="mx-auto flex max-w-275 flex-col items-center justify-between gap-4 md:flex-row">
 
-              <p className="text-sm font-semibold text-slate-800">
+              <p className="text-center text-sm font-semibold text-slate-800 md:text-left">
                 © 2024 CareTwin. HIPAA Compliant Platform.
               </p>
 
-              <div className="flex flex-wrap gap-5 text-sm text-slate-600">
+              <div className="flex flex-wrap justify-center gap-4 text-sm text-slate-600 sm:gap-5">
 
                 <a
                   href="#"
@@ -536,7 +525,7 @@ export default function SupportPage() {
 
                 <a
                   href="#"
-                  className="text-cyan-700 font-medium hover:underline"
+                  className="font-medium text-cyan-700 hover:underline"
                 >
                   Help Center
                 </a>
@@ -569,7 +558,7 @@ function SidebarItem({
   return (
     <button
       type="button"
-      className="w-full flex items-center gap-4 px-4 py-3 rounded-lg text-slate-700 hover:bg-white hover:text-cyan-700 transition text-left"
+      className="flex w-full items-center gap-4 rounded-lg px-4 py-3 text-left text-slate-700 transition hover:bg-white hover:text-cyan-700"
     >
       {icon}
 
