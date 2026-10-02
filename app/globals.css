@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+/* ---------- CareTwin design tokens (same palette as before, now reusable) ---------- */
+:root {
+  --background: #f5f6ff;
+  --foreground: #111827;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-brand: #0878b8;
+  --color-brand-dark: #06699f;
+  --color-brand-soft: #eaf5fb;
+  --color-mint: #66f49b;
+  --color-mint-deep: #0b5940;
+  --color-mint-soft: #eafbf1;
+  --color-navy: #121b32;
+  --color-navy-2: #1b2943;
+  --color-canvas: #f5f6ff;
+  --color-lavender: #dbdfff;
+  --color-line: #e5e7eb;
+  --color-ink: #111827;
+  --color-body: #4b5563;
+  --color-mute: #6b7280;
+  --color-danger: #e5484d;
+  --color-danger-soft: #fff0f0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Subtle looping motion used sparingly (hero badge, live dot) */
+@keyframes ct-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes ct-pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(102, 244, 155, 0.55); }
+  100% { box-shadow: 0 0 0 10px rgba(102, 244, 155, 0); }
+}
+@keyframes ct-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.ct-float { animation: ct-float 5s ease-in-out infinite; }
+.ct-live { animation: ct-pulse-ring 1.8s ease-out infinite; }
+.ct-skeleton {
+  background: linear-gradient(90deg, #eef0f6 25%, #f8f9fc 50%, #eef0f6 75%);
+  background-size: 200% 100%;
+  animation: ct-shimmer 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-float, .ct-live, .ct-skeleton { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* Print: only the element marked #print-area is printed (emergency card, report summary) */
+@media print {
+  body * { visibility: hidden; }
+  #print-area, #print-area * { visibility: visible; }
+  #print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none !important;
+  }
+  .no-print { display: none !important; }
+}
