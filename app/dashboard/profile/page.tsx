@@ -96,9 +96,10 @@ function ProfileEditor({ user }: { user: NonNullable<ReturnType<typeof useCareDa
               Gender
               <select value={gender} onChange={(event) => setGender(event.target.value)} className="mt-1.5 h-11 w-full rounded-lg border border-[#dfe3ea] bg-white px-3 text-sm font-normal text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15">
                 <option value="">Not provided</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+                <option value="prefer_not_to_say">Prefer not to say</option>
               </select>
             </label>
           </div>

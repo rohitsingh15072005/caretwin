@@ -11,7 +11,7 @@ export default function RecordStats({ records, now }: { records: MedicalRecord[]
   return (
     <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
       <StatCard icon={<FileText size={18} />} label="Total records" number={records.length} tone="blue" />
-      <StatCard icon={<FolderOpen size={18} />} label="Records with files" number={records.filter((r) => r.fileName).length} tone="green" />
+      <StatCard icon={<FolderOpen size={18} />} label="Records with files" number={records.filter((r) => r.hasFile || r.fileName).length} tone="green" />
       <StatCard icon={<Clock3 size={18} />} label="Last update" text={latest ? relativeDays(latest.date, now) : "No records"} tone="gray" />
       <StatCard icon={<Layers3 size={18} />} label="Categories" number={new Set(records.map((record) => record.type)).size} tone="red" />
     </div>

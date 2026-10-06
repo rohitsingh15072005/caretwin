@@ -20,6 +20,17 @@ export type CareUser = AuthUser & {
   createdAt: string;
 };
 
+export type ApiFamilyMember = {
+  id: string;
+  name: string;
+  relationship: string;
+  dateOfBirth: string | null;
+  gender: string | null;
+  isSelf: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ApiRecord = {
   id: string;
   title: string;
@@ -32,6 +43,19 @@ export type ApiRecord = {
   createdAt: string;
   updatedAt: string;
   hasFile: boolean;
+  familyMemberId: string | null;
+  familyMember?: { id: string; name: string; relationship: string };
+};
+
+export type ApiOcrResult = {
+  status: "queued" | "processing" | "succeeded" | "failed";
+  text?: string;
+  error?: string;
+  confidence?: number | null;
+  needsReview?: boolean;
+  flags?: string[];
+  quality?: "low" | "medium" | "high" | "unscored";
+  updatedAt: string;
 };
 
 export type DashboardSummary = {
@@ -118,7 +142,7 @@ async function request<T>(
   token?: string,
 ): Promise<T> {
   const headers = new Headers(init.headers);
-  if (init.body && !headers.has("Content-Type")) {
+  if (typeof init.body === "string" && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   if (token) headers.set("Authorization", `Bearer ${token}`);
@@ -273,12 +297,13 @@ export async function updateCurrentUser(
   });
 }
 
-export async function listRecords() {
+export async function listRecords(familyMemberId?: string) {
   const items: ApiRecord[] = [];
   let cursor: string | null = null;
 
   do {
     const query = new URLSearchParams({ limit: "50" });
+    if (familyMemberId) query.set("familyMemberId", familyMemberId);
     if (cursor) query.set("cursor", cursor);
     const page = await apiFetch<{ items: ApiRecord[]; nextCursor: string | null }>(
       `/records?${query.toString()}`,
@@ -298,6 +323,7 @@ export async function createRecord(
     doctorName?: string;
     hospitalName?: string;
     recordDate?: string;
+    familyMemberId?: string;
   },
 ) {
   return apiFetch<{ record: ApiRecord }>("/records", {
@@ -315,6 +341,7 @@ export async function updateRecord(
     doctorName?: string | null;
     hospitalName?: string | null;
     recordDate?: string | null;
+    familyMemberId?: string | null;
   },
 ) {
   return apiFetch<{ record: ApiRecord }>(`/records/${encodeURIComponent(id)}`, {
@@ -325,6 +352,109 @@ export async function updateRecord(
 
 export async function deleteRecord(id: string) {
   return apiFetch<void>(`/records/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export async function uploadRecordFile(id: string, file: File) {
+  const body = new FormData();
+  body.append("file", file);
+  return apiFetch<{ message: string; mime: string }>(`/records/${encodeURIComponent(id)}/file`, {
+    method: "POST",
+    body,
+  });
+}
+
+export async function getRecordOcr(id: string) {
+  return apiFetch<ApiOcrResult>(`/records/${encodeURIComponent(id)}/ocr`);
+}
+
+export async function listFamilyMembers() {
+  return apiFetch<{ familyMembers: ApiFamilyMember[] }>("/family-members");
+}
+
+export async function createFamilyMember(input: {
+  name: string;
+  relationship: string;
+  dateOfBirth?: string;
+  gender?: FamilyGender;
+}) {
+  return apiFetch<{ familyMember: ApiFamilyMember }>("/family-members", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export type FamilyGender =
+  | "female"
+  | "male"
+  | "other"
+  | "prefer_not_to_say";
+
+export async function updateFamilyMember(
+  id: string,
+  input: {
+    name?: string;
+    relationship?: string;
+    dateOfBirth?: string | null;
+    gender?: FamilyGender | null;
+  },
+) {
+  return apiFetch<{ familyMember: ApiFamilyMember }>(
+    `/family-members/${encodeURIComponent(id)}`,
+    { method: "PATCH", body: JSON.stringify(input) },
+  );
+}
+
+export async function deleteFamilyMember(id: string) {
+  return apiFetch<void>(`/family-members/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
+async function requestFile(path: string, token: string) {
+  let response: Response;
+  try {
+    response = await fetch(`/api${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: "same-origin",
+    });
+  } catch {
+    throw new ApiError(
+      "Could not connect to the CareTwin API. Check CARETWIN_BACKEND_ORIGIN and that the backend is online.",
+      0,
+    );
+  }
+
+  if (!response.ok) {
+    let message = `The CareTwin API request failed (HTTP ${response.status}).`;
+    try {
+      const payload = (await response.json()) as { error?: { message?: string } };
+      message = payload.error?.message ?? message;
+    } catch {
+      // Non-JSON error responses still include their HTTP status in the message.
+    }
+    throw new ApiError(message, response.status);
+  }
+
+  return {
+    blob: await response.blob(),
+    contentDisposition: response.headers.get("Content-Disposition"),
+  };
+}
+
+export async function downloadRecordFile(id: string) {
+  let token = accessToken ?? (await refreshAccessToken());
+  if (!token) throw new ApiError("Please sign in to continue.", 401);
+
+  try {
+    return await requestFile(`/records/${encodeURIComponent(id)}/file`, token);
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.status !== 401) throw error;
+  }
+
+  accessToken = null;
+  token = await refreshAccessToken();
+  if (!token) throw new ApiError("Your session has expired. Please sign in again.", 401);
+  return requestFile(`/records/${encodeURIComponent(id)}/file`, token);
 }
 
 export async function getDashboardSummary() {

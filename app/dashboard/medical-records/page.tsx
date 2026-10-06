@@ -23,6 +23,7 @@ import { RECORD_TYPE_TO_API, RECORD_TYPES } from "@/lib/data";
 import { useCareData } from "@/lib/useCareData";
 import { formatDate, inPeriod, periodLabel, toISO, type Period } from "@/lib/dates";
 import { downloadText, slug } from "@/lib/download";
+import { downloadRecordFile } from "@/lib/api";
 import type { MedicalRecord } from "@/lib/types";
 
 export default function MedicalRecordsPage() {
@@ -41,7 +42,7 @@ function RecordsView() {
   const {
     hydrated,
     now,
-    self,
+    members,
     memberById,
     scopedRecords,
     activeId,
@@ -49,6 +50,7 @@ function RecordsView() {
     refreshRecords,
     createRecord,
     updateRecord,
+    uploadRecordFile,
     deleteRecord,
   } = useCareData();
 
@@ -85,7 +87,28 @@ function RecordsView() {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [scopedRecords, period, type, query, now, memberById]);
 
-  const download = (r: MedicalRecord) => {
+  const download = async (r: MedicalRecord) => {
+    if (r.hasFile) {
+      try {
+        const { blob, contentDisposition } = await downloadRecordFile(r.id);
+        const encodedName = contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+        const plainName = contentDisposition?.match(/filename="([^"]+)"/i)?.[1];
+        const fileName = encodedName
+          ? decodeURIComponent(encodedName)
+          : plainName ?? r.fileName ?? `${slug(r.title)}-attachment`;
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = fileName;
+        anchor.click();
+        URL.revokeObjectURL(url);
+        toast("Attachment downloaded");
+      } catch (error) {
+        toast(error instanceof Error ? error.message : "The attachment could not be downloaded.", "error");
+      }
+      return;
+    }
+
     const m = memberById.get(r.memberId);
     const lines = [
       r.title,
@@ -104,7 +127,7 @@ function RecordsView() {
   const today = toISO(new Date(now));
   const scopeName = memberById.get(activeId)?.name || "you";
 
-  const saveRecord = async (record: MedicalRecord) => {
+  const saveRecord = async (record: MedicalRecord): Promise<MedicalRecord> => {
     const input = {
       title: record.title,
       recordType: RECORD_TYPE_TO_API[record.type],
@@ -112,20 +135,24 @@ function RecordsView() {
       doctorName: record.doctor || null,
       hospitalName: record.hospital || null,
       recordDate: record.date,
+      familyMemberId: record.memberId,
     };
     if (record.id) {
-      await updateRecord(record.id, input);
+      const updated = await updateRecord(record.id, input);
       toast("Record updated");
+      return updated;
     } else {
-      await createRecord({
+      const created = await createRecord({
         title: input.title,
         recordType: input.recordType,
         description: record.description || undefined,
         doctorName: record.doctor || undefined,
         hospitalName: record.hospital || undefined,
         recordDate: record.date,
+        familyMemberId: record.memberId,
       });
       toast("Record added");
+      return created;
     }
   };
 
@@ -270,10 +297,12 @@ function RecordsView() {
           setEditing(null);
           setParam({ add: null });
         }}
-        memberId={self.id}
+        memberId={activeId}
+        members={members}
         today={today}
         record={editing}
         onSave={saveRecord}
+        onUploadFile={uploadRecordFile}
       />
 
       <RecordDetailModal record={detail} member={detail ? memberById.get(detail.memberId) : undefined} onClose={() => setDetail(null)} onDownload={download} onEdit={() => {

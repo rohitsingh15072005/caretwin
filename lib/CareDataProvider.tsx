@@ -6,11 +6,16 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
+  createFamilyMember as createFamilyMemberRequest,
   createRecord as createRecordRequest,
+  deleteFamilyMember as deleteFamilyMemberRequest,
   deleteRecord as deleteRecordRequest,
+  listFamilyMembers,
+  uploadRecordFile as uploadRecordFileRequest,
   getCurrentUser,
   getDashboardSummary,
   listNotifications,
@@ -18,12 +23,15 @@ import {
   markAllNotificationsRead as markAllNotificationsReadRequest,
   markNotificationRead as markNotificationReadRequest,
   updateCurrentUser,
+  updateFamilyMember as updateFamilyMemberRequest,
   updateRecord as updateRecordRequest,
   ApiError,
+  type ApiFamilyMember,
   type ApiNotification,
   type ApiRecord,
   type CareUser,
   type DashboardSummary,
+  type FamilyGender,
 } from "./api";
 import { API_RECORD_TYPE_TO_LABEL, MEMBER_COLORS, SELF_ID } from "./data";
 import type { Account, MedicalRecord, Member } from "./types";
@@ -46,6 +54,7 @@ type RecordInput = {
   doctorName?: string;
   hospitalName?: string;
   recordDate?: string;
+  familyMemberId?: string;
 };
 
 type RecordPatch = {
@@ -55,6 +64,7 @@ type RecordPatch = {
   doctorName?: string | null;
   hospitalName?: string | null;
   recordDate?: string | null;
+  familyMemberId?: string | null;
 };
 
 type CareDataValue = {
@@ -63,6 +73,7 @@ type CareDataValue = {
   user: CareUser | null;
   self: Member;
   members: Member[];
+  familyState: ResourceState;
   account: Account;
   records: MedicalRecord[];
   scopedRecords: MedicalRecord[];
@@ -79,8 +90,22 @@ type CareDataValue = {
   markAllNotificationsRead: () => Promise<void>;
   refresh: () => Promise<void>;
   updateProfile: (input: ProfilePatch) => Promise<void>;
-  createRecord: (input: RecordInput) => Promise<void>;
-  updateRecord: (id: string, input: RecordPatch) => Promise<void>;
+  createFamilyMember: (input: {
+    name: string;
+    relationship: string;
+    dateOfBirth?: string;
+    gender?: FamilyGender;
+  }) => Promise<void>;
+  updateFamilyMember: (id: string, input: {
+    name?: string;
+    relationship?: string;
+    dateOfBirth?: string | null;
+    gender?: FamilyGender | null;
+  }) => Promise<void>;
+  deleteFamilyMember: (id: string) => Promise<void>;
+  createRecord: (input: RecordInput) => Promise<MedicalRecord>;
+  updateRecord: (id: string, input: RecordPatch) => Promise<MedicalRecord>;
+  uploadRecordFile: (id: string, file: File) => Promise<void>;
   deleteRecord: (id: string) => Promise<void>;
   refreshRecords: () => Promise<void>;
 };
@@ -89,6 +114,7 @@ const blankMember: Member = {
   id: SELF_ID,
   name: "",
   relation: "Self",
+  isSelf: true,
   dob: "",
   gender: "",
   bloodGroup: "",
@@ -134,10 +160,23 @@ function mapUser(user: CareUser): Member {
   };
 }
 
-function mapRecord(record: ApiRecord, memberId: string): MedicalRecord {
+function mapFamilyMember(member: ApiFamilyMember): Member {
+  return {
+    ...blankMember,
+    id: member.id,
+    name: member.name,
+    relation: member.relationship,
+    isSelf: member.isSelf,
+    dob: member.dateOfBirth ?? "",
+    gender: member.gender ?? "",
+    color: MEMBER_COLORS[member.id.length % MEMBER_COLORS.length],
+  };
+}
+
+function mapRecord(record: ApiRecord, selfMemberId: string): MedicalRecord {
   return {
     id: record.id,
-    memberId,
+    memberId: record.familyMemberId ?? selfMemberId,
     type: API_RECORD_TYPE_TO_LABEL[record.recordType] ?? "Other",
     title: record.title,
     description: record.description ?? "",
@@ -146,42 +185,78 @@ function mapRecord(record: ApiRecord, memberId: string): MedicalRecord {
     hospital: record.hospitalName ?? undefined,
     createdAt: record.createdAt,
     fileName: record.fileName ?? undefined,
+    hasFile: record.hasFile,
   };
 }
 
 export function CareDataProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<CareUser | null>(null);
+  const [familyMembers, setFamilyMembers] = useState<ApiFamilyMember[]>([]);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [rawRecords, setRawRecords] = useState<ApiRecord[]>([]);
   const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
   const [notifications, setNotifications] = useState<ApiNotification[]>([]);
   const [profileState, setProfileState] = useState<ResourceState>(initialResource);
+  const [familyState, setFamilyState] = useState<ResourceState>(initialResource);
   const [recordsState, setRecordsState] = useState<ResourceState>(initialResource);
   const [dashboardState, setDashboardState] = useState<ResourceState>(initialResource);
   const [notificationsState, setNotificationsState] = useState<ResourceState>(initialResource);
   const [now] = useState(() => Date.now());
+  const recordsRequestId = useRef(0);
+
+  const mappedFamilyMembers = useMemo(
+    () => familyMembers.map(mapFamilyMember),
+    [familyMembers],
+  );
+  const self = useMemo(() => {
+    const selfFamilyMember = familyMembers.find((member) => member.isSelf);
+    return selfFamilyMember
+      ? mapFamilyMember(selfFamilyMember)
+      : user
+        ? mapUser(user)
+        : blankMember;
+  }, [familyMembers, user]);
+  const members = useMemo(() => {
+    const hasSelf = mappedFamilyMembers.some((member) => member.isSelf);
+    return user && !hasSelf
+      ? [self, ...mappedFamilyMembers]
+      : mappedFamilyMembers;
+  }, [mappedFamilyMembers, self, user]);
+  const activeId = members.some((member) => member.id === selectedMemberId)
+    ? selectedMemberId as string
+    : self.id;
+  const setActiveId = useCallback((id: string) => {
+    setSelectedMemberId(id);
+  }, []);
 
   const refreshRecords = useCallback(async () => {
+    const requestId = ++recordsRequestId.current;
     setRecordsState({ status: "loading", error: null });
     try {
-      const result = await listRecords();
+      const result = await listRecords(
+        familyState.status === "ready" ? activeId : undefined,
+      );
+      if (requestId !== recordsRequestId.current) return;
       setRawRecords(result.items);
       setRecordsState({ status: "ready", error: null });
     } catch (error) {
+      if (requestId !== recordsRequestId.current) return;
       setRawRecords([]);
       setRecordsState(resourceError(error));
     }
-  }, []);
+  }, [activeId, familyState.status]);
 
   const refresh = useCallback(async () => {
     setProfileState({ status: "loading", error: null });
+    setFamilyState({ status: "loading", error: null });
     setRecordsState({ status: "loading", error: null });
     setDashboardState({ status: "loading", error: null });
     setNotificationsState({ status: "loading", error: null });
 
-    const [profileResult, recordsResult, dashboardResult, notificationsResult] =
+    const [profileResult, familyResult, dashboardResult, notificationsResult] =
       await Promise.allSettled([
         getCurrentUser(),
-        listRecords(),
+        listFamilyMembers(),
         getDashboardSummary(),
         listNotifications(),
       ]);
@@ -194,12 +269,12 @@ export function CareDataProvider({ children }: { children: React.ReactNode }) {
       setProfileState(resourceError(profileResult.reason));
     }
 
-    if (recordsResult.status === "fulfilled") {
-      setRawRecords(recordsResult.value.items);
-      setRecordsState({ status: "ready", error: null });
+    if (familyResult.status === "fulfilled") {
+      setFamilyMembers(familyResult.value.familyMembers);
+      setFamilyState({ status: "ready", error: null });
     } else {
-      setRawRecords([]);
-      setRecordsState(resourceError(recordsResult.reason));
+      setFamilyMembers([]);
+      setFamilyState(resourceError(familyResult.reason));
     }
 
     if (dashboardResult.status === "fulfilled") {
@@ -225,13 +300,46 @@ export function CareDataProvider({ children }: { children: React.ReactNode }) {
   }, [refresh]);
 
   const updateProfile = useCallback(async (input: ProfilePatch) => {
+    const result = await updateCurrentUser(input);
+    setUser(result.user);
+    setProfileState({ status: "ready", error: null });
     try {
-      const result = await updateCurrentUser(input);
-      setUser(result.user);
-      setProfileState({ status: "ready", error: null });
+      const familyResult = await listFamilyMembers();
+      setFamilyMembers(familyResult.familyMembers);
+      setFamilyState({ status: "ready", error: null });
     } catch (error) {
-      throw error;
+      setFamilyState(resourceError(error));
     }
+  }, []);
+
+  const createFamilyMember = useCallback(async (input: {
+    name: string;
+    relationship: string;
+    dateOfBirth?: string;
+    gender?: FamilyGender;
+  }) => {
+    const result = await createFamilyMemberRequest(input);
+    setFamilyMembers((previous) => [...previous, result.familyMember]);
+    setSelectedMemberId(result.familyMember.id);
+    setFamilyState({ status: "ready", error: null });
+  }, []);
+
+  const updateFamilyMember = useCallback(async (id: string, input: {
+    name?: string;
+    relationship?: string;
+    dateOfBirth?: string | null;
+    gender?: FamilyGender | null;
+  }) => {
+    const result = await updateFamilyMemberRequest(id, input);
+    setFamilyMembers((previous) =>
+      previous.map((member) => member.id === id ? result.familyMember : member),
+    );
+  }, []);
+
+  const deleteFamilyMember = useCallback(async (id: string) => {
+    await deleteFamilyMemberRequest(id);
+    setFamilyMembers((previous) => previous.filter((member) => member.id !== id));
+    setSelectedMemberId((current) => current === id ? null : current);
   }, []);
 
   const markNotificationRead = useCallback(async (id: string) => {
@@ -251,14 +359,48 @@ export function CareDataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const createRecord = useCallback(async (input: RecordInput) => {
-    const result = await createRecordRequest(input);
+    let recordInput = input;
+    if (familyState.status !== "ready") {
+      const withoutFamilyMember = { ...input };
+      delete withoutFamilyMember.familyMemberId;
+      recordInput = withoutFamilyMember;
+    }
+    const result = await createRecordRequest(recordInput);
     setRawRecords((previous) => [result.record, ...previous]);
-  }, []);
+    if (familyState.status === "ready" && result.record.familyMemberId) {
+      setSelectedMemberId(result.record.familyMemberId);
+    }
+    return mapRecord(result.record, user?.id ?? SELF_ID);
+  }, [familyState.status, user?.id]);
 
   const updateRecord = useCallback(async (id: string, input: RecordPatch) => {
-    const result = await updateRecordRequest(id, input);
+    let patch = input;
+    if (familyState.status !== "ready") {
+      const withoutFamilyMember = { ...input };
+      delete withoutFamilyMember.familyMemberId;
+      patch = withoutFamilyMember;
+    }
+    const result = await updateRecordRequest(id, patch);
+    setRawRecords((previous) => {
+      if (
+        familyState.status === "ready" &&
+        result.record.familyMemberId !== activeId
+      ) {
+        return previous.filter((record) => record.id !== id);
+      }
+      return previous.map((record) => (record.id === id ? result.record : record));
+    });
+    return mapRecord(result.record, user?.id ?? SELF_ID);
+  }, [activeId, familyState.status, user?.id]);
+
+  const uploadRecordFile = useCallback(async (id: string, file: File) => {
+    await uploadRecordFileRequest(id, file);
     setRawRecords((previous) =>
-      previous.map((record) => (record.id === id ? result.record : record)),
+      previous.map((record) =>
+        record.id === id
+          ? { ...record, fileName: file.name, hasFile: true }
+          : record,
+      ),
     );
   }, []);
 
@@ -267,15 +409,13 @@ export function CareDataProvider({ children }: { children: React.ReactNode }) {
     setRawRecords((previous) => previous.filter((record) => record.id !== id));
   }, []);
 
-  const self = useMemo(() => (user ? mapUser(user) : blankMember), [user]);
-  const members = useMemo(() => (user ? [self] : []), [self, user]);
   const account = useMemo(
     () => (user ? { email: user.email, phone: user.phone ?? "", avatar: "" } : emptyAccount),
     [user],
   );
   const records = useMemo(
-    () => rawRecords.map((record) => mapRecord(record, user?.id ?? SELF_ID)),
-    [rawRecords, user?.id],
+    () => rawRecords.map((record) => mapRecord(record, self.id)),
+    [rawRecords, self.id],
   );
   const memberById = useMemo(() => new Map(members.map((member) => [member.id, member])), [members]);
   const hydrated =
@@ -292,9 +432,10 @@ export function CareDataProvider({ children }: { children: React.ReactNode }) {
       records,
       scopedRecords: records,
       memberById,
-      activeId: user?.id ?? SELF_ID,
-      setActiveId: () => undefined,
+      activeId,
+      setActiveId,
       profileState,
+      familyState,
       recordsState,
       dashboardState,
       notificationsState,
@@ -304,8 +445,12 @@ export function CareDataProvider({ children }: { children: React.ReactNode }) {
       markAllNotificationsRead,
       refresh,
       updateProfile,
+      createFamilyMember,
+      updateFamilyMember,
+      deleteFamilyMember,
       createRecord,
       updateRecord,
+      uploadRecordFile,
       deleteRecord,
       refreshRecords,
     }),
@@ -318,7 +463,10 @@ export function CareDataProvider({ children }: { children: React.ReactNode }) {
       account,
       records,
       memberById,
+      activeId,
+      setActiveId,
       profileState,
+      familyState,
       recordsState,
       dashboardState,
       notificationsState,
@@ -328,12 +476,22 @@ export function CareDataProvider({ children }: { children: React.ReactNode }) {
       markAllNotificationsRead,
       refresh,
       updateProfile,
+      createFamilyMember,
+      updateFamilyMember,
+      deleteFamilyMember,
       createRecord,
       updateRecord,
+      uploadRecordFile,
       deleteRecord,
       refreshRecords,
     ],
   );
+
+  useEffect(() => {
+    if (profileState.status !== "ready" || familyState.status === "loading") return;
+    const timer = window.setTimeout(() => void refreshRecords(), 0);
+    return () => window.clearTimeout(timer);
+  }, [profileState.status, familyState.status, activeId, refreshRecords]);
 
   if (profileState.status === "error" && profileState.statusCode === 401) {
     return (
