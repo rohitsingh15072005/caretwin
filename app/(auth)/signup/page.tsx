@@ -27,7 +27,6 @@ export default function SignupPage() {
   const [errors, setErrors] = useState<Partial<typeof form>>({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
   const score = strength(form.password);
@@ -58,7 +57,7 @@ export default function SignupPage() {
         email: form.email.trim(),
         password: form.password,
       });
-      setSubmitted(true);
+      router.push("/login?registered=1");
     } catch (error) {
       setServerError(
         error instanceof Error ? error.message : "Account creation failed. Please try again.",
@@ -67,21 +66,6 @@ export default function SignupPage() {
       setLoading(false);
     }
   };
-
-  if (submitted) {
-    return (
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl bg-white p-7 shadow-xl sm:p-9">
-        <h1 className="text-3xl font-bold tracking-tight text-ink">Check your email</h1>
-        <p className="mt-3 text-slate-600">
-          If this address can be registered, CareTwin has sent a verification link to{" "}
-          <strong>{form.email.trim()}</strong>. Verify the address before signing in.
-        </p>
-        <button type="button" onClick={() => router.push("/login")} className={`${btnPrimary} mt-7 w-full py-3`}>
-          Continue to sign in
-        </button>
-      </motion.div>
-    );
-  }
 
   return (
     <motion.form initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} onSubmit={submit} noValidate className="rounded-2xl bg-white p-7 shadow-xl sm:p-9">

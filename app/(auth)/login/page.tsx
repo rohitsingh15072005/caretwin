@@ -1,12 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { TextInput, btnPrimary } from "@/components/ui/Field";
 import { login, requestPasswordReset } from "@/lib/api";
+
+function AccountCreatedNotice() {
+  const searchParams = useSearchParams();
+
+  if (searchParams.get("registered") !== "1") return null;
+
+  return (
+    <p role="status" className="mb-5 rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-800">
+      Account created successfully. You can now sign in.
+    </p>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -67,6 +79,10 @@ export default function LoginPage() {
             ? "Enter your account email and we'll send a reset link if an account exists."
             : "Sign in to your CareTwin account"}
       </p>
+
+      <Suspense fallback={null}>
+        <AccountCreatedNotice />
+      </Suspense>
 
       {!resetRequested && (
         <div className="space-y-5">
