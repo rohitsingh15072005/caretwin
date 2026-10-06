@@ -18,6 +18,7 @@ export interface MedicalRecord {
   hospital?: string;
   createdAt?: string;
   fileName?: string;
+  hasFile?: boolean;
 }
 
 export interface Contact {

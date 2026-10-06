@@ -118,7 +118,7 @@ async function request<T>(
   token?: string,
 ): Promise<T> {
   const headers = new Headers(init.headers);
-  if (init.body && !headers.has("Content-Type")) {
+  if (typeof init.body === "string" && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   if (token) headers.set("Authorization", `Bearer ${token}`);
@@ -325,6 +325,62 @@ export async function updateRecord(
 
 export async function deleteRecord(id: string) {
   return apiFetch<void>(`/records/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export async function uploadRecordFile(id: string, file: File) {
+  const body = new FormData();
+  body.append("file", file);
+  return apiFetch<{ message: string; mime: string }>(`/records/${encodeURIComponent(id)}/file`, {
+    method: "POST",
+    body,
+  });
+}
+
+async function requestFile(path: string, token: string) {
+  let response: Response;
+  try {
+    response = await fetch(`/api${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: "same-origin",
+    });
+  } catch {
+    throw new ApiError(
+      "Could not connect to the CareTwin API. Check CARETWIN_BACKEND_ORIGIN and that the backend is online.",
+      0,
+    );
+  }
+
+  if (!response.ok) {
+    let message = `The CareTwin API request failed (HTTP ${response.status}).`;
+    try {
+      const payload = (await response.json()) as { error?: { message?: string } };
+      message = payload.error?.message ?? message;
+    } catch {
+      // Non-JSON error responses still include their HTTP status in the message.
+    }
+    throw new ApiError(message, response.status);
+  }
+
+  return {
+    blob: await response.blob(),
+    contentDisposition: response.headers.get("Content-Disposition"),
+  };
+}
+
+export async function downloadRecordFile(id: string) {
+  let token = accessToken ?? (await refreshAccessToken());
+  if (!token) throw new ApiError("Please sign in to continue.", 401);
+
+  try {
+    return await requestFile(`/records/${encodeURIComponent(id)}/file`, token);
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.status !== 401) throw error;
+  }
+
+  accessToken = null;
+  token = await refreshAccessToken();
+  if (!token) throw new ApiError("Your session has expired. Please sign in again.", 401);
+  return requestFile(`/records/${encodeURIComponent(id)}/file`, token);
 }
 
 export async function getDashboardSummary() {

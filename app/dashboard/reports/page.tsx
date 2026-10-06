@@ -1,18 +1,33 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, Printer, ClipboardList } from "lucide-react";
+import { Download, Printer, ClipboardList, Upload } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import MemberTabs from "@/components/shared/MemberTabs";
 import PeriodPicker from "@/components/shared/PeriodPicker";
-import { btnGhost } from "@/components/ui/Field";
+import AddRecordModal from "@/components/Dashboard/MedicalRecords/AddRecordModal";
+import { btnGhost, btnPrimary } from "@/components/ui/Field";
 import { Stagger, StaggerItem } from "@/components/ui/Motion";
 import { useCareData } from "@/lib/useCareData";
-import { formatDate, inPeriod, periodLabel, type Period } from "@/lib/dates";
+import { useToast } from "@/components/ui/Toast";
+import { formatDate, inPeriod, periodLabel, toISO, type Period } from "@/lib/dates";
 import { downloadText, slug } from "@/lib/download";
+import { RECORD_TYPE_TO_API } from "@/lib/data";
+import type { MedicalRecord } from "@/lib/types";
 
 export default function ReportsPage() {
-  const { hydrated, now, self, scopedRecords, recordsState, refreshRecords } = useCareData();
+  const {
+    hydrated,
+    now,
+    self,
+    scopedRecords,
+    recordsState,
+    refreshRecords,
+    createRecord,
+    uploadRecordFile,
+  } = useCareData();
+  const toast = useToast();
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [period, setPeriod] = useState<Period>({ id: "6m" });
   const inRange = useMemo(
     () => scopedRecords.filter((record) => inPeriod(record.date, period, now)).sort((a, b) => b.date.localeCompare(a.date)),
@@ -41,6 +56,18 @@ export default function ReportsPage() {
     downloadText(`records-${slug(self.name || "account")}.txt`, lines.join("\n\n"));
   };
 
+  const saveUploadedDocument = async (record: MedicalRecord) => {
+    const result = await createRecord({
+      title: record.title,
+      recordType: RECORD_TYPE_TO_API[record.type],
+      description: record.description || undefined,
+      doctorName: record.doctor || undefined,
+      hospitalName: record.hospital || undefined,
+      recordDate: record.date,
+    });
+    return result;
+  };
+
   return (
     <Stagger className="mx-auto w-full max-w-[1000px] space-y-5">
       <StaggerItem>
@@ -66,6 +93,20 @@ export default function ReportsPage() {
               <button type="button" className={btnGhost} onClick={exportReport} disabled={!inRange.length}><Download size={16} /> Download .txt</button>
             </div>
           </div>
+        </section>
+      </StaggerItem>
+
+      <StaggerItem>
+        <section className="flex flex-col gap-3 rounded-xl border border-line bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-ink">Add a medical document</h2>
+            <p className="mt-1 max-w-2xl text-[13px] leading-5 text-mute">
+              Save a document or image as a medical record. PDF, JPEG, or PNG up to 10 MB. Files are stored but not OCR-processed or medically analyzed.
+            </p>
+          </div>
+          <button type="button" className={btnPrimary} onClick={() => setUploadOpen(true)}>
+            <Upload size={16} /> Upload document
+          </button>
         </section>
       </StaggerItem>
 
@@ -115,6 +156,7 @@ export default function ReportsPage() {
                     <p className="text-sm font-semibold text-ink">{record.title}</p>
                     <p className="mt-0.5 text-xs text-mute">{record.type} · {formatDate(record.date)}{record.doctor ? ` · ${record.doctor}` : ""}</p>
                     {record.description && <p className="mt-1 text-[13px] leading-5 text-body">{record.description}</p>}
+                    {record.hasFile && <p className="mt-1 text-xs font-medium text-brand">Attachment available{record.fileName ? `: ${record.fileName}` : ""}</p>}
                   </li>
                 ))}
               </ol>
@@ -123,6 +165,18 @@ export default function ReportsPage() {
           </section>
         )}
       </StaggerItem>
+
+      <AddRecordModal
+        open={uploadOpen}
+        onClose={() => setUploadOpen(false)}
+        memberId={self.id}
+        today={toISO(new Date(now))}
+        record={null}
+        requireAttachment
+        onSave={saveUploadedDocument}
+        onUploadFile={uploadRecordFile}
+        onComplete={() => toast("Document uploaded and saved to your records")}
+      />
     </Stagger>
   );
 }

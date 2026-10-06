@@ -40,9 +40,9 @@ export default function MedicalRecordCard({ record, member, showMember, onView, 
           <div className="flex items-center gap-2">
             <UserRound size={14} /> {record.doctor || "Doctor not added"}
           </div>
-          {record.fileName && (
+          {(record.hasFile || record.fileName) && (
             <div className="flex items-center gap-2">
-              <Paperclip size={14} /> <span className="truncate">{record.fileName}</span>
+              <Paperclip size={14} /> <span className="truncate">{record.fileName ?? "File attached"}</span>
             </div>
           )}
         </div>
@@ -52,7 +52,7 @@ export default function MedicalRecordCard({ record, member, showMember, onView, 
             <Eye size={14} /> View
           </button>
           <button type="button" onClick={onDownload} className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-[#dfe3ea] text-[13px] font-semibold text-[#374151] transition hover:bg-[#f8fafc]">
-            <Download size={14} /> Download
+            <Download size={14} /> {record.hasFile ? "Download file" : "Download summary"}
           </button>
           <button type="button" onClick={onEdit} aria-label={`Edit ${record.title}`} className="flex h-9 w-10 items-center justify-center rounded-md border border-[#dfe3ea] text-body transition hover:bg-slate-50">
             <Pencil size={15} />

@@ -32,7 +32,7 @@ export default function RecordDetailModal({
               <Pencil size={15} /> Edit record
             </button>
             <button type="button" className={btnGhost} onClick={() => onDownload(record)}>
-              <Download size={15} /> Download summary
+              <Download size={15} /> {record.hasFile ? "Download attached file" : "Download summary"}
             </button>
             <button type="button" className={btnGhost} onClick={onClose}>
               Close
@@ -63,7 +63,7 @@ export default function RecordDetailModal({
             <p className="mt-1 leading-6 text-body">{record.description}</p>
           </div>
 
-          {record.fileName && <p className="text-xs text-mute">Attached file: {record.fileName}</p>}
+          {(record.hasFile || record.fileName) && <p className="text-xs text-mute">Attached file: {record.fileName ?? "File attached"}</p>}
         </div>
       )}
     </Modal>

@@ -11,6 +11,7 @@ import {
 import {
   createRecord as createRecordRequest,
   deleteRecord as deleteRecordRequest,
+  uploadRecordFile as uploadRecordFileRequest,
   getCurrentUser,
   getDashboardSummary,
   listNotifications,
@@ -79,8 +80,9 @@ type CareDataValue = {
   markAllNotificationsRead: () => Promise<void>;
   refresh: () => Promise<void>;
   updateProfile: (input: ProfilePatch) => Promise<void>;
-  createRecord: (input: RecordInput) => Promise<void>;
-  updateRecord: (id: string, input: RecordPatch) => Promise<void>;
+  createRecord: (input: RecordInput) => Promise<MedicalRecord>;
+  updateRecord: (id: string, input: RecordPatch) => Promise<MedicalRecord>;
+  uploadRecordFile: (id: string, file: File) => Promise<void>;
   deleteRecord: (id: string) => Promise<void>;
   refreshRecords: () => Promise<void>;
 };
@@ -146,6 +148,7 @@ function mapRecord(record: ApiRecord, memberId: string): MedicalRecord {
     hospital: record.hospitalName ?? undefined,
     createdAt: record.createdAt,
     fileName: record.fileName ?? undefined,
+    hasFile: record.hasFile,
   };
 }
 
@@ -253,12 +256,25 @@ export function CareDataProvider({ children }: { children: React.ReactNode }) {
   const createRecord = useCallback(async (input: RecordInput) => {
     const result = await createRecordRequest(input);
     setRawRecords((previous) => [result.record, ...previous]);
-  }, []);
+    return mapRecord(result.record, user?.id ?? SELF_ID);
+  }, [user?.id]);
 
   const updateRecord = useCallback(async (id: string, input: RecordPatch) => {
     const result = await updateRecordRequest(id, input);
     setRawRecords((previous) =>
       previous.map((record) => (record.id === id ? result.record : record)),
+    );
+    return mapRecord(result.record, user?.id ?? SELF_ID);
+  }, [user?.id]);
+
+  const uploadRecordFile = useCallback(async (id: string, file: File) => {
+    await uploadRecordFileRequest(id, file);
+    setRawRecords((previous) =>
+      previous.map((record) =>
+        record.id === id
+          ? { ...record, fileName: file.name, hasFile: true }
+          : record,
+      ),
     );
   }, []);
 
@@ -306,6 +322,7 @@ export function CareDataProvider({ children }: { children: React.ReactNode }) {
       updateProfile,
       createRecord,
       updateRecord,
+      uploadRecordFile,
       deleteRecord,
       refreshRecords,
     }),
@@ -330,6 +347,7 @@ export function CareDataProvider({ children }: { children: React.ReactNode }) {
       updateProfile,
       createRecord,
       updateRecord,
+      uploadRecordFile,
       deleteRecord,
       refreshRecords,
     ],
