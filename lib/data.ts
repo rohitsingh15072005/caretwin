@@ -1,14 +1,34 @@
-import type { Account, MedicalRecord, Member, Prefs, RecordType } from "./types";
+import type { RecordType } from "./types";
 
 export const RECORD_TYPES: RecordType[] = [
   "Laboratory",
-  "Cardiology",
-  "Radiology",
   "Prescription",
-  "Consultation",
+  "Radiology",
+  "Discharge summary",
   "Vaccination",
+  "Insurance",
   "Other",
 ];
+
+export const RECORD_TYPE_TO_API: Record<RecordType, string> = {
+  Laboratory: "lab_report",
+  Prescription: "prescription",
+  Radiology: "imaging",
+  "Discharge summary": "discharge_summary",
+  Vaccination: "vaccination",
+  Insurance: "insurance",
+  Other: "other",
+};
+
+export const API_RECORD_TYPE_TO_LABEL: Record<string, RecordType> = {
+  lab_report: "Laboratory",
+  prescription: "Prescription",
+  imaging: "Radiology",
+  discharge_summary: "Discharge summary",
+  vaccination: "Vaccination",
+  insurance: "Insurance",
+  other: "Other",
+};
 
 export const RELATIONS = [
   "Self",
@@ -36,225 +56,3 @@ export const MEMBER_COLORS = [
 ];
 
 export const SELF_ID = "self";
-
-export const SEED_MEMBERS: Member[] = [
-  {
-    id: SELF_ID,
-    name: "Rohit Singh",
-    relation: "Self",
-    dob: "2005-07-15",
-    gender: "Male",
-    bloodGroup: "B+",
-    heightCm: "175",
-    weightKg: "68",
-    allergies: ["Penicillin"],
-    conditions: [],
-    medications: [],
-    primaryDoctor: "Dr. Anjali Mehta",
-    insurance: "",
-    organDonor: false,
-    contacts: [{ name: "Sunita Singh", phone: "+91 98300 00000", relation: "Mother" }],
-    color: MEMBER_COLORS[0],
-  },
-  {
-    id: "m-mother",
-    name: "Sunita Singh",
-    relation: "Mother",
-    dob: "1976-03-02",
-    gender: "Female",
-    bloodGroup: "O+",
-    heightCm: "160",
-    weightKg: "64",
-    allergies: [],
-    conditions: ["Type 2 diabetes (pre-diabetic range)", "Mild hypertension"],
-    medications: ["Metformin 500 mg"],
-    primaryDoctor: "Dr. Lokhandwala",
-    insurance: "",
-    organDonor: true,
-    contacts: [{ name: "Rohit Singh", phone: "+91 98300 11111", relation: "Son" }],
-    color: MEMBER_COLORS[1],
-  },
-  {
-    id: "m-father",
-    name: "Ajay Singh",
-    relation: "Father",
-    dob: "1972-11-20",
-    gender: "Male",
-    bloodGroup: "A+",
-    heightCm: "172",
-    weightKg: "78",
-    allergies: ["Sulfa drugs"],
-    conditions: ["Knee osteoarthritis"],
-    medications: [],
-    primaryDoctor: "Dr. Rajesh Kumar",
-    insurance: "",
-    organDonor: false,
-    contacts: [{ name: "Sunita Singh", phone: "+91 98300 00000", relation: "Spouse" }],
-    color: MEMBER_COLORS[2],
-  },
-];
-
-export const SEED_RECORDS: MedicalRecord[] = [
-  {
-    id: "r1",
-    memberId: SELF_ID,
-    type: "Laboratory",
-    title: "Full Blood Count Analysis",
-    description: "Comprehensive metabolic panel and lipid profile for routine checkup.",
-    date: "2026-09-24",
-    doctor: "Dr. Lokhandwala",
-    analysis: "All blood counts are within the reference range. No action needed.",
-    metrics: [
-      { label: "Hemoglobin", value: "13.8 g/dL", flag: "normal" },
-      { label: "WBC", value: "7.2 x10³/µL", flag: "normal" },
-      { label: "Platelets", value: "245 x10³/µL", flag: "normal" },
-    ],
-  },
-  {
-    id: "r2",
-    memberId: SELF_ID,
-    type: "Cardiology",
-    title: "ECG Report & Summary",
-    description: "Standard 12-lead electrocardiogram performed during cardiac stress test.",
-    date: "2026-09-12",
-    doctor: "Dr. Anjali Mehta",
-    analysis: "Normal sinus rhythm detected. 15% improvement in resting heart rate compared to 2025.",
-    metrics: [{ label: "Resting heart rate", value: "68 bpm", flag: "normal" }],
-  },
-  {
-    id: "r3",
-    memberId: SELF_ID,
-    type: "Radiology",
-    title: "Chest X-Ray Digital Copy",
-    description: "Diagnostic imaging for annual physical. Clear findings reported.",
-    date: "2026-08-30",
-    doctor: "Dr. Rajesh Kumar",
-  },
-  {
-    id: "r4",
-    memberId: SELF_ID,
-    type: "Prescription",
-    title: "Medication Reconciliation",
-    description: "Updated list of active prescriptions and dosage instructions.",
-    date: "2026-07-15",
-    doctor: "Dr. Lokhandwala",
-  },
-  {
-    id: "r5",
-    memberId: SELF_ID,
-    type: "Laboratory",
-    title: "Lipid Profile",
-    description: "Fasting lipid panel ordered after the annual physical.",
-    date: "2026-05-18",
-    doctor: "Dr. Anjali Mehta",
-    analysis: "LDL cholesterol is slightly above the optimal range. Diet changes and a repeat test in 3 months are suggested.",
-    metrics: [
-      { label: "Total cholesterol", value: "214 mg/dL", flag: "watch" },
-      { label: "LDL", value: "142 mg/dL", flag: "watch" },
-      { label: "HDL", value: "48 mg/dL", flag: "normal" },
-    ],
-    followUp: true,
-  },
-  {
-    id: "r6",
-    memberId: SELF_ID,
-    type: "Consultation",
-    title: "Annual Physical Examination",
-    description: "General examination, vitals and lifestyle review.",
-    date: "2026-03-10",
-    doctor: "Dr. Anjali Mehta",
-  },
-  {
-    id: "r7",
-    memberId: SELF_ID,
-    type: "Vaccination",
-    title: "Influenza Vaccine",
-    description: "Seasonal influenza vaccination, single dose.",
-    date: "2026-01-22",
-    doctor: "City Health Clinic",
-  },
-  {
-    id: "m1",
-    memberId: "m-mother",
-    type: "Laboratory",
-    title: "HbA1c & Fasting Glucose",
-    description: "Three-monthly diabetes monitoring panel.",
-    date: "2026-09-05",
-    doctor: "Dr. Lokhandwala",
-    analysis: "HbA1c is in the pre-diabetic range and slightly higher than the last test. A diet review is recommended.",
-    metrics: [
-      { label: "HbA1c", value: "6.4 %", flag: "watch" },
-      { label: "Fasting glucose", value: "118 mg/dL", flag: "watch" },
-    ],
-    followUp: true,
-  },
-  {
-    id: "m2",
-    memberId: "m-mother",
-    type: "Cardiology",
-    title: "Blood Pressure Review",
-    description: "Home BP log reviewed with the cardiologist.",
-    date: "2026-07-02",
-    doctor: "Dr. Anjali Mehta",
-    metrics: [{ label: "Blood pressure", value: "138/88 mmHg", flag: "watch" }],
-  },
-  {
-    id: "m3",
-    memberId: "m-mother",
-    type: "Prescription",
-    title: "Metformin Refill",
-    description: "Prescription renewal, 500 mg twice daily.",
-    date: "2026-06-14",
-    doctor: "Dr. Lokhandwala",
-  },
-  {
-    id: "f1",
-    memberId: "m-father",
-    type: "Radiology",
-    title: "Knee MRI",
-    description: "MRI of the right knee for persistent pain.",
-    date: "2026-08-08",
-    doctor: "Dr. Rajesh Kumar",
-    analysis: "Mild cartilage wear consistent with early osteoarthritis. Physiotherapy suggested.",
-    metrics: [{ label: "Cartilage wear", value: "Mild", flag: "watch" }],
-    followUp: true,
-  },
-];
-
-export const SEED_ACCOUNT: Account = {
-  email: "rohitsinghyt43@gmail.com",
-  phone: "",
-  avatar: "",
-};
-
-export const SEED_PREFS: Prefs = {
-  shareWithAI: true,
-  analytics: false,
-  twoFactor: false,
-  notifyFollowUps: true,
-  notifyReports: true,
-  notifyProduct: false,
-  notifyEmail: true,
-};
-
-// Sample vitals for the overview chart (replace with real device data later).
-export const SAMPLE_VITALS = {
-  heart: {
-    label: "Resting heart rate",
-    unit: "bpm",
-    months: ["May", "Jun", "Jul", "Aug", "Sep", "Oct"],
-    values: [76, 74, 73, 71, 69, 68],
-  },
-  glucose: {
-    label: "Fasting glucose",
-    unit: "mg/dL",
-    months: ["May", "Jun", "Jul", "Aug", "Sep", "Oct"],
-    values: [99, 97, 98, 95, 94, 93],
-  },
-  sleep: {
-    label: "Sleep",
-    unit: "hrs",
-    months: ["May", "Jun", "Jul", "Aug", "Sep", "Oct"],
-    values: [6.8, 7.0, 7.2, 7.6, 8.0, 8.2],
-  },
-} as const;

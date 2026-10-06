@@ -19,8 +19,8 @@ import ConfirmModal from "@/components/shared/ConfirmModal";
 import { useToast } from "@/components/ui/Toast";
 import { Stagger, StaggerItem } from "@/components/ui/Motion";
 import { inputCls, btnPrimary } from "@/components/ui/Field";
-import { RECORD_TYPES } from "@/lib/data";
-import { ALL_ID, useCareData } from "@/lib/useCareData";
+import { RECORD_TYPE_TO_API, RECORD_TYPES } from "@/lib/data";
+import { useCareData } from "@/lib/useCareData";
 import { formatDate, inPeriod, periodLabel, toISO, type Period } from "@/lib/dates";
 import { downloadText, slug } from "@/lib/download";
 import type { MedicalRecord } from "@/lib/types";
@@ -38,7 +38,19 @@ function RecordsView() {
   const pathname = usePathname();
   const params = useSearchParams();
   const toast = useToast();
-  const { hydrated, now, members, memberById, records, setRecords, scopedRecords, activeId } = useCareData();
+  const {
+    hydrated,
+    now,
+    self,
+    memberById,
+    scopedRecords,
+    activeId,
+    recordsState,
+    refreshRecords,
+    createRecord,
+    updateRecord,
+    deleteRecord,
+  } = useCareData();
 
   // Search text and the add dialog live in the URL, so header search and "Add record" links work from anywhere.
   const query = params.get("q") ?? "";
@@ -56,6 +68,7 @@ function RecordsView() {
   const [view, setView] = useState<"grid" | "timeline">("grid");
   const [detail, setDetail] = useState<MedicalRecord | null>(null);
   const [toDelete, setToDelete] = useState<MedicalRecord | null>(null);
+  const [editing, setEditing] = useState<MedicalRecord | null>(null);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -77,20 +90,44 @@ function RecordsView() {
     const lines = [
       r.title,
       `${r.type} | ${formatDate(r.date)}`,
-      `Patient: ${m?.name ?? "Unknown"}`,
+      `Patient: ${m?.name || "You"}`,
       `Doctor: ${r.doctor || "Not added"}`,
+      `Hospital: ${r.hospital || "Not added"}`,
       "",
       r.description,
-      ...(r.metrics?.length ? ["", "Key results:", ...r.metrics.map((x) => `- ${x.label}: ${x.value} (${x.flag})`)] : []),
-      ...(r.analysis ? ["", `AI insight: ${r.analysis}`] : []),
     ];
     downloadText(`${slug(r.title)}.txt`, lines.join("\n"));
     toast("Summary downloaded");
   };
 
-  const showMember = activeId === ALL_ID;
+  const showMember = false;
   const today = toISO(new Date(now));
-  const scopeName = activeId === ALL_ID ? "everyone" : (memberById.get(activeId)?.name ?? "");
+  const scopeName = memberById.get(activeId)?.name || "you";
+
+  const saveRecord = async (record: MedicalRecord) => {
+    const input = {
+      title: record.title,
+      recordType: RECORD_TYPE_TO_API[record.type],
+      description: record.description || null,
+      doctorName: record.doctor || null,
+      hospitalName: record.hospital || null,
+      recordDate: record.date,
+    };
+    if (record.id) {
+      await updateRecord(record.id, input);
+      toast("Record updated");
+    } else {
+      await createRecord({
+        title: input.title,
+        recordType: input.recordType,
+        description: record.description || undefined,
+        doctorName: record.doctor || undefined,
+        hospitalName: record.hospital || undefined,
+        recordDate: record.date,
+      });
+      toast("Record added");
+    }
+  };
 
   return (
     <Stagger className="mx-auto w-full max-w-[1200px] space-y-5">
@@ -103,8 +140,18 @@ function RecordsView() {
       </StaggerItem>
 
       <StaggerItem>
-        <RecordStats records={scopedRecords} now={now} />
+        {recordsState.status === "ready" && <RecordStats records={scopedRecords} now={now} />}
+        {recordsState.status === "loading" && <div className="ct-skeleton h-20 rounded-xl" />}
       </StaggerItem>
+
+      {recordsState.status === "error" && (
+        <StaggerItem>
+          <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#f3b5b5] bg-white px-4 py-3 text-sm text-danger">
+            <span>{recordsState.error}</span>
+            <button type="button" onClick={() => void refreshRecords()} className="font-semibold underline">Retry</button>
+          </div>
+        </StaggerItem>
+      )}
 
       {/* Time limiter */}
       <StaggerItem>
@@ -169,7 +216,7 @@ function RecordsView() {
           {hydrated ? `${visible.length} record${visible.length === 1 ? "" : "s"} for ${scopeName}` : ""}
         </p>
 
-        {!hydrated ? (
+        {!hydrated || recordsState.status === "loading" ? (
           <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[0, 1, 2].map((i) => (
               <div key={i} className="ct-skeleton h-60 rounded-xl" />
@@ -200,6 +247,7 @@ function RecordsView() {
                     member={memberById.get(r.memberId)}
                     showMember={showMember}
                     onView={() => setDetail(r)}
+                    onEdit={() => setEditing(r)}
                     onDownload={() => download(r)}
                     onDelete={() => setToDelete(r)}
                   />
@@ -209,7 +257,7 @@ function RecordsView() {
             <AddRecordCard onClick={() => setParam({ add: "1" })} />
           </section>
         )}
-        {hydrated && view === "grid" && visible.length === 0 && (
+        {hydrated && recordsState.status === "ready" && view === "grid" && visible.length === 0 && (
           <div className="mt-4">
             <EmptyState onAdd={() => setParam({ add: "1" })} />
           </div>
@@ -217,28 +265,35 @@ function RecordsView() {
       </StaggerItem>
 
       <AddRecordModal
-        open={addOpen}
-        onClose={() => setParam({ add: null })}
-        members={members}
-        defaultMemberId={activeId === ALL_ID ? members[0].id : activeId}
-        today={today}
-        onSave={(r) => {
-          setRecords((prev) => [r, ...prev]);
-          toast("Record added");
+        open={addOpen || !!editing}
+        onClose={() => {
+          setEditing(null);
+          setParam({ add: null });
         }}
+        memberId={self.id}
+        today={today}
+        record={editing}
+        onSave={saveRecord}
       />
 
-      <RecordDetailModal record={detail} member={detail ? memberById.get(detail.memberId) : undefined} onClose={() => setDetail(null)} onDownload={download} />
+      <RecordDetailModal record={detail} member={detail ? memberById.get(detail.memberId) : undefined} onClose={() => setDetail(null)} onDownload={download} onEdit={() => {
+        if (detail) setEditing(detail);
+        setDetail(null);
+      }} />
 
       <ConfirmModal
         open={!!toDelete}
         onClose={() => setToDelete(null)}
         title="Delete this record?"
-        message={`"${toDelete?.title ?? ""}" will be removed from this device. This cannot be undone.`}
+        message={`"${toDelete?.title ?? ""}" will be deleted from your CareTwin account. This cannot be undone.`}
         onConfirm={() => {
           if (!toDelete) return;
-          setRecords(records.filter((r) => r.id !== toDelete.id));
-          toast("Record deleted", "info");
+          void deleteRecord(toDelete.id).then(() => {
+            toast("Record deleted", "info");
+            setToDelete(null);
+          }).catch((error: unknown) => {
+            toast(error instanceof Error ? error.message : "Record could not be deleted.", "error");
+          });
         }}
       />
     </Stagger>

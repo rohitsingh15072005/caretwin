@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Brain, Clock3, BellRing } from "lucide-react";
+import { FileText, FolderOpen, Clock3, Layers3 } from "lucide-react";
 import { CountUp } from "@/components/ui/Motion";
 import type { MedicalRecord } from "@/lib/types";
 import { relativeDays } from "@/lib/dates";
@@ -10,10 +10,10 @@ export default function RecordStats({ records, now }: { records: MedicalRecord[]
 
   return (
     <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-      <StatCard icon={<FileText size={18} />} label="Total documents" number={records.length} tone="blue" />
-      <StatCard icon={<Brain size={18} />} label="AI analyzed" number={records.filter((r) => r.analysis).length} tone="green" />
+      <StatCard icon={<FileText size={18} />} label="Total records" number={records.length} tone="blue" />
+      <StatCard icon={<FolderOpen size={18} />} label="Records with files" number={records.filter((r) => r.fileName).length} tone="green" />
       <StatCard icon={<Clock3 size={18} />} label="Last update" text={latest ? relativeDays(latest.date, now) : "No records"} tone="gray" />
-      <StatCard icon={<BellRing size={18} />} label="Follow-ups" number={records.filter((r) => r.followUp).length} tone="red" />
+      <StatCard icon={<Layers3 size={18} />} label="Categories" number={new Set(records.map((record) => record.type)).size} tone="red" />
     </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { BellRing } from "lucide-react";
 import type { MedicalRecord, Member } from "@/lib/types";
 import { formatDate, monthKey, monthLabel } from "@/lib/dates";
 import Avatar from "@/components/ui/Avatar";
@@ -59,11 +58,6 @@ export default function RecordTimeline({
                         {r.type} · {r.doctor || "Doctor not added"}
                       </p>
                     </div>
-                    {r.followUp && (
-                      <span className="hidden items-center gap-1 rounded-full bg-danger-soft px-2 py-1 text-xs font-semibold text-danger sm:inline-flex">
-                        <BellRing size={11} /> Follow-up
-                      </span>
-                    )}
                     {showMember && m && <Avatar name={m.name} color={m.color} size={28} />}
                   </button>
                 </motion.li>

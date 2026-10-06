@@ -14,7 +14,7 @@ export default function EmergencyCard() {
       </div>
       <h3 className="text-[15px] font-semibold">Emergency QR</h3>
       <p className="mt-1 text-[13px] leading-5 text-[#b9c4d8]">
-        Let responders see blood group, allergies and contacts in one scan.
+        Create a QR with your account name and age. Medical details are not available from your profile yet.
       </p>
       <div className="mt-4 flex items-center gap-1 text-[13px] font-semibold text-mint">
         <span>Create card</span>

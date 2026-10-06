@@ -1,19 +1,11 @@
 export type RecordType =
   | "Laboratory"
-  | "Cardiology"
-  | "Radiology"
   | "Prescription"
-  | "Consultation"
+  | "Radiology"
+  | "Discharge summary"
   | "Vaccination"
+  | "Insurance"
   | "Other";
-
-export type MetricFlag = "normal" | "watch" | "abnormal";
-
-export interface Metric {
-  label: string;
-  value: string;
-  flag: MetricFlag;
-}
 
 export interface MedicalRecord {
   id: string;
@@ -23,9 +15,8 @@ export interface MedicalRecord {
   description: string;
   date: string; // ISO yyyy-mm-dd
   doctor: string;
-  analysis?: string;
-  metrics?: Metric[];
-  followUp?: boolean;
+  hospital?: string;
+  createdAt?: string;
   fileName?: string;
 }
 
@@ -58,14 +49,4 @@ export interface Account {
   email: string;
   phone: string;
   avatar: string; // data URL or ""
-}
-
-export interface Prefs {
-  shareWithAI: boolean;
-  analytics: boolean;
-  twoFactor: boolean;
-  notifyFollowUps: boolean;
-  notifyReports: boolean;
-  notifyProduct: boolean;
-  notifyEmail: boolean;
 }
