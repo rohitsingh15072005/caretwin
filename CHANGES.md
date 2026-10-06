@@ -16,7 +16,8 @@
 - Removed 8 empty/unused files; replaced the next/dist/client/link import
 
 ## Notes
-- Data lives in localStorage (lib/store.ts). Swap lib/useCareData.ts for API calls when the backend exists.
+- Family, profile, medical-record, and preference data still live in localStorage (`lib/store.ts`); those flows need a schema/API mapping before backend sync.
+- Login, signup, email verification, and password recovery use the backend auth endpoints through the same-origin `/api/*` rewrite configured by `CARETWIN_BACKEND_ORIGIN`.
 - AI chat, symptom analysis and report summary are local stand-ins (lib/analyze.ts, lib/summary.ts).
 - Change support email / emergency number in lib/site.ts.
 - New dependencies: qrcode, geist (+ @types/qrcode). Run `npm install`.

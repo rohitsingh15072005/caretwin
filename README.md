@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create `.env.local` and set `CARETWIN_BACKEND_ORIGIN` to the backend's origin (no path), then run `npm run dev`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```dotenv
+CARETWIN_BACKEND_ORIGIN=https://caretwin-backend.onrender.com
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Next.js proxies `/api/*` to that origin while stripping the `/api` prefix. For example, the frontend request `/api/auth/login` reaches Express at `/auth/login`.
 
-## Learn More
+## Vercel and backend configuration
 
-To learn more about Next.js, take a look at the following resources:
+- In **Vercel → Project → Settings → Environment Variables**, set `CARETWIN_BACKEND_ORIGIN=https://caretwin-backend.onrender.com` for Production and any Preview environments that need API access. Enter only the origin, not `/health` or another route.
+- Redeploy after changing the value because the external rewrite is configured during the Next.js build.
+- In the backend deployment, set `CORS_ORIGINS=https://caretwin-six.vercel.app` and `FRONTEND_URL=https://caretwin-six.vercel.app` (add any other exact frontend origins that should be allowed). For the Vercel-proxied production deployment, set `COOKIE_PATH=/api/auth`, `COOKIE_SAMESITE=strict`, and `TRUST_PROXY_HOPS=2`, as in the backend production example. Keep production cookie security enabled; never expose backend secrets through `NEXT_PUBLIC_*` variables.
+- Verify backend readiness at `/health/ready` on its deployed origin before testing the frontend. The backend requires its configured PostgreSQL and Redis services.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Login, signup, email verification, and password recovery use the backend auth API. Signup collects first and last names and follows the backend password rules; verify the email before signing in. Access tokens stay in memory, and the refresh token is held in the backend's HttpOnly cookie. Family, profile, medical-record, and preference data remain browser-local and are not synchronized with the backend yet.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Validation
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run lint
+npm run build
+```

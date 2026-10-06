@@ -6,14 +6,14 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { TextInput, btnPrimary } from "@/components/ui/Field";
-import { useCareData } from "@/lib/useCareData";
+import { register } from "@/lib/api";
 
 function strength(pw: string) {
   let s = 0;
-  if (pw.length >= 8) s++;
-  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) s++;
+  if (pw.length >= 10) s++;
+  if (/[a-z]/.test(pw)) s++;
+  if (/[A-Z]/.test(pw)) s++;
   if (/\d/.test(pw)) s++;
-  if (/[^A-Za-z0-9]/.test(pw)) s++;
   return s;
 }
 
@@ -22,31 +22,66 @@ const colors = ["bg-slate-200", "bg-red-400", "bg-amber-400", "bg-lime-500", "bg
 
 export default function SignupPage() {
   const router = useRouter();
-  const { members, setMembers, account, setAccount } = useCareData();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [show, setShow] = useState(false);
   const [errors, setErrors] = useState<Partial<typeof form>>({});
   const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
   const score = strength(form.password);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setServerError("");
     const next: typeof errors = {};
-    if (!form.name.trim()) next.name = "Enter your full name.";
+    const nameParts = form.name.trim().split(/\s+/).filter(Boolean);
+    if (nameParts.length < 2) next.name = "Enter your first and last name.";
     if (!/^\S+@\S+\.\S+$/.test(form.email)) next.email = "Enter a valid email address.";
-    if (form.password.length < 8) next.password = "Use at least 8 characters.";
+    if (form.password.length < 10) next.password = "Use at least 10 characters.";
+    else if (!/[a-z]/.test(form.password) || !/[A-Z]/.test(form.password) || !/\d/.test(form.password)) {
+      next.password = "Include a lowercase letter, an uppercase letter, and a number.";
+    } else if (new TextEncoder().encode(form.password).length > 72) {
+      next.password = "Password must be 72 UTF-8 bytes or fewer.";
+    }
     if (form.confirmPassword !== form.password) next.confirmPassword = "Passwords do not match.";
     setErrors(next);
     if (Object.keys(next).length) return;
 
-    // Save the name and email to the profile so the dashboard greets the right person.
-    setMembers(members.map((m) => (m.id === "self" ? { ...m, name: form.name.trim() } : m)));
-    setAccount({ ...account, email: form.email.trim() });
     setLoading(true);
-    setTimeout(() => router.push("/dashboard"), 500);
+    try {
+      const [firstName, ...lastName] = nameParts;
+      await register({
+        firstName,
+        lastName: lastName.join(" "),
+        email: form.email.trim(),
+        password: form.password,
+      });
+      setSubmitted(true);
+    } catch (error) {
+      setServerError(
+        error instanceof Error ? error.message : "Account creation failed. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (submitted) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl bg-white p-7 shadow-xl sm:p-9">
+        <h1 className="text-3xl font-bold tracking-tight text-ink">Check your email</h1>
+        <p className="mt-3 text-slate-600">
+          If this address can be registered, CareTwin has sent a verification link to{" "}
+          <strong>{form.email.trim()}</strong>. Verify the address before signing in.
+        </p>
+        <button type="button" onClick={() => router.push("/login")} className={`${btnPrimary} mt-7 w-full py-3`}>
+          Continue to sign in
+        </button>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.form initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} onSubmit={submit} noValidate className="rounded-2xl bg-white p-7 shadow-xl sm:p-9">
@@ -69,11 +104,13 @@ export default function SignupPage() {
                 <span key={i} className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${i <= score ? colors[score] : "bg-slate-200"}`} />
               ))}
             </div>
-            <p className="mt-1.5 text-xs text-slate-500">Password strength: {labels[score]}</p>
+            <p className="mt-1.5 text-xs text-slate-500">Password strength: {labels[score]}. Use 10+ characters with lowercase, uppercase, and a number.</p>
           </div>
         )}
         <TextInput label="Confirm password" type={show ? "text" : "password"} autoComplete="new-password" value={form.confirmPassword} error={errors.confirmPassword} onChange={set("confirmPassword")} />
       </div>
+
+      {serverError && <p role="alert" className="mt-4 text-sm font-medium text-danger">{serverError}</p>}
 
       <button type="submit" disabled={loading} className={`${btnPrimary} mt-7 w-full py-3`}>
         {loading && <Loader2 size={16} className="animate-spin" />}
