@@ -4,7 +4,7 @@ import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import { SelectInput, TextArea, TextInput, btnGhost, btnPrimary } from "@/components/ui/Field";
 import { RECORD_TYPES } from "@/lib/data";
-import type { MedicalRecord, RecordType } from "@/lib/types";
+import type { MedicalRecord, Member, RecordType } from "@/lib/types";
 
 export default function AddRecordModal({
   open,
@@ -12,6 +12,7 @@ export default function AddRecordModal({
   memberId,
   today,
   record,
+  members,
   onSave,
   onUploadFile,
   requireAttachment = false,
@@ -22,6 +23,7 @@ export default function AddRecordModal({
   memberId: string;
   today: string;
   record: MedicalRecord | null;
+  members: Member[];
   onSave: (r: MedicalRecord) => Promise<MedicalRecord>;
   onUploadFile: (id: string, file: File) => Promise<void>;
   requireAttachment?: boolean;
@@ -33,14 +35,15 @@ export default function AddRecordModal({
       ? "Edit medical record"
       : "Add a medical record";
   return (
-    <Modal open={open} onClose={onClose} size="lg" title={title} description="Add record details and attach a PDF, JPEG, or PNG (maximum 10 MB). File contents are stored but not analyzed.">
-      {open && <Form key={record?.id ?? "new"} memberId={memberId} today={today} record={record} onSave={onSave} onUploadFile={onUploadFile} requireAttachment={requireAttachment} onComplete={onComplete} onClose={onClose} />}
+    <Modal open={open} onClose={onClose} size="lg" title={title} description="Add record details and attach a PDF, JPEG, or PNG (maximum 10 MB). Extracted text may appear after upload; no medical interpretation is generated.">
+      {open && <Form key={record?.id ?? "new"} memberId={memberId} members={members} today={today} record={record} onSave={onSave} onUploadFile={onUploadFile} requireAttachment={requireAttachment} onComplete={onComplete} onClose={onClose} />}
     </Modal>
   );
 }
 
 function Form({
   memberId,
+  members,
   today,
   record,
   onSave,
@@ -50,6 +53,7 @@ function Form({
   onClose,
 }: {
   memberId: string;
+  members: Member[];
   today: string;
   record: MedicalRecord | null;
   onSave: (r: MedicalRecord) => Promise<MedicalRecord>;
@@ -59,6 +63,7 @@ function Form({
   onClose: () => void;
 }) {
   const [type, setType] = useState<RecordType>(record?.type ?? "Laboratory");
+  const [recordMemberId, setRecordMemberId] = useState(record?.memberId ?? memberId);
   const [title, setTitle] = useState(record?.title ?? "");
   const [date, setDate] = useState(record?.date ?? today);
   const [doctor, setDoctor] = useState(record?.doctor ?? "");
@@ -112,7 +117,7 @@ function Form({
     try {
       const saved = await onSave({
         id: savedRecord?.id ?? record?.id ?? "",
-        memberId: record?.memberId ?? memberId,
+        memberId: recordMemberId,
         type,
         title: title.trim(),
         description: description.trim(),
@@ -121,7 +126,7 @@ function Form({
         hospital: hospital.trim() || undefined,
       });
       setSavedRecord(saved);
-      if (file && !saved.hasFile) {
+      if (file) {
         setProgress("Uploading attachment…");
         try {
           await onUploadFile(saved.id, file);
@@ -152,6 +157,15 @@ function Form({
         <SelectInput label="Type" value={type} onChange={(event) => setType(event.target.value as RecordType)} options={RECORD_TYPES} />
         <TextInput label="Report date" type="date" max={today} value={date} onChange={(event) => setDate(event.target.value)} />
       </div>
+      <SelectInput
+        label="Record belongs to"
+        value={recordMemberId}
+        onChange={(event) => setRecordMemberId(event.target.value)}
+        options={members.map((member) => ({
+          value: member.id,
+          label: member.isSelf ? `You${member.name ? ` (${member.name})` : ""}` : `${member.name} (${member.relation})`,
+        }))}
+      />
       <TextInput label="Title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Thyroid profile" />
       <div className="grid gap-4 sm:grid-cols-2">
         <TextInput label="Doctor or clinic" value={doctor} onChange={(event) => setDoctor(event.target.value)} />
@@ -159,23 +173,22 @@ function Form({
       </div>
       <TextArea label="Notes" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Add notes from this report..." />
       {record?.hasFile ? (
-        <p className="text-xs text-mute">This record already has an attached file{record.fileName ? `: ${record.fileName}` : ""}. File replacement is not available here.</p>
-      ) : (
-        <label className="block text-[13px] font-semibold text-[#374151]">
-          {requireAttachment ? "Choose a medical document or image" : "Attach a file (optional)"}
-          <input
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-            onChange={(event) => {
-              setFile(event.target.files?.[0] ?? null);
-              setError(null);
-            }}
-            className="mt-1.5 block w-full rounded-lg border border-[#dfe3ea] bg-white px-3 py-2 text-sm font-normal"
-          />
-          <span className="mt-1 block text-xs font-normal text-mute">PDF, JPEG, or PNG; maximum 10 MB.</span>
-        </label>
-      )}
-      <p className="text-xs text-mute">File contents are stored with this record. OCR, AI analysis, and follow-up tracking are not available.</p>
+        <p className="text-xs text-mute">Current attachment{record.fileName ? `: ${record.fileName}` : ""}. Choose another file to replace it or queue OCR again.</p>
+      ) : null}
+      <label className="block text-[13px] font-semibold text-[#374151]">
+        {requireAttachment ? "Choose a medical document or image" : record?.hasFile ? "Replace or re-upload attachment (optional)" : "Attach a file (optional)"}
+        <input
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+          onChange={(event) => {
+            setFile(event.target.files?.[0] ?? null);
+            setError(null);
+          }}
+          className="mt-1.5 block w-full rounded-lg border border-[#dfe3ea] bg-white px-3 py-2 text-sm font-normal"
+        />
+        <span className="mt-1 block text-xs font-normal text-mute">PDF, JPEG, or PNG; maximum 10 MB.</span>
+      </label>
+      <p className="text-xs text-mute">OCR extracts text only; it does not interpret medical meaning. AI analysis and follow-up tracking are not available.</p>
       {progress && <p role="status" aria-live="polite" className="text-sm font-medium text-brand">{progress}</p>}
       {error && <p role="alert" className="text-sm font-medium text-danger">{error}</p>}
       <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">

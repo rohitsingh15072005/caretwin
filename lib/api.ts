@@ -20,6 +20,17 @@ export type CareUser = AuthUser & {
   createdAt: string;
 };
 
+export type ApiFamilyMember = {
+  id: string;
+  name: string;
+  relationship: string;
+  dateOfBirth: string | null;
+  gender: string | null;
+  isSelf: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ApiRecord = {
   id: string;
   title: string;
@@ -32,6 +43,19 @@ export type ApiRecord = {
   createdAt: string;
   updatedAt: string;
   hasFile: boolean;
+  familyMemberId: string | null;
+  familyMember?: { id: string; name: string; relationship: string };
+};
+
+export type ApiOcrResult = {
+  status: "queued" | "processing" | "succeeded" | "failed";
+  text?: string;
+  error?: string;
+  confidence?: number | null;
+  needsReview?: boolean;
+  flags?: string[];
+  quality?: "low" | "medium" | "high" | "unscored";
+  updatedAt: string;
 };
 
 export type DashboardSummary = {
@@ -273,12 +297,13 @@ export async function updateCurrentUser(
   });
 }
 
-export async function listRecords() {
+export async function listRecords(familyMemberId?: string) {
   const items: ApiRecord[] = [];
   let cursor: string | null = null;
 
   do {
     const query = new URLSearchParams({ limit: "50" });
+    if (familyMemberId) query.set("familyMemberId", familyMemberId);
     if (cursor) query.set("cursor", cursor);
     const page = await apiFetch<{ items: ApiRecord[]; nextCursor: string | null }>(
       `/records?${query.toString()}`,
@@ -298,6 +323,7 @@ export async function createRecord(
     doctorName?: string;
     hospitalName?: string;
     recordDate?: string;
+    familyMemberId?: string;
   },
 ) {
   return apiFetch<{ record: ApiRecord }>("/records", {
@@ -315,6 +341,7 @@ export async function updateRecord(
     doctorName?: string | null;
     hospitalName?: string | null;
     recordDate?: string | null;
+    familyMemberId?: string | null;
   },
 ) {
   return apiFetch<{ record: ApiRecord }>(`/records/${encodeURIComponent(id)}`, {
@@ -333,6 +360,53 @@ export async function uploadRecordFile(id: string, file: File) {
   return apiFetch<{ message: string; mime: string }>(`/records/${encodeURIComponent(id)}/file`, {
     method: "POST",
     body,
+  });
+}
+
+export async function getRecordOcr(id: string) {
+  return apiFetch<ApiOcrResult>(`/records/${encodeURIComponent(id)}/ocr`);
+}
+
+export async function listFamilyMembers() {
+  return apiFetch<{ familyMembers: ApiFamilyMember[] }>("/family-members");
+}
+
+export async function createFamilyMember(input: {
+  name: string;
+  relationship: string;
+  dateOfBirth?: string;
+  gender?: FamilyGender;
+}) {
+  return apiFetch<{ familyMember: ApiFamilyMember }>("/family-members", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export type FamilyGender =
+  | "female"
+  | "male"
+  | "other"
+  | "prefer_not_to_say";
+
+export async function updateFamilyMember(
+  id: string,
+  input: {
+    name?: string;
+    relationship?: string;
+    dateOfBirth?: string | null;
+    gender?: FamilyGender | null;
+  },
+) {
+  return apiFetch<{ familyMember: ApiFamilyMember }>(
+    `/family-members/${encodeURIComponent(id)}`,
+    { method: "PATCH", body: JSON.stringify(input) },
+  );
+}
+
+export async function deleteFamilyMember(id: string) {
+  return apiFetch<void>(`/family-members/${encodeURIComponent(id)}`, {
+    method: "DELETE",
   });
 }
 

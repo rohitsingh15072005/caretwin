@@ -6,6 +6,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import MemberTabs from "@/components/shared/MemberTabs";
 import PeriodPicker from "@/components/shared/PeriodPicker";
 import AddRecordModal from "@/components/Dashboard/MedicalRecords/AddRecordModal";
+import RecordOcrResult from "@/components/Dashboard/MedicalRecords/RecordOcrResult";
 import { btnGhost, btnPrimary } from "@/components/ui/Field";
 import { Stagger, StaggerItem } from "@/components/ui/Motion";
 import { useCareData } from "@/lib/useCareData";
@@ -20,10 +21,13 @@ export default function ReportsPage() {
     hydrated,
     now,
     self,
+    members,
+    activeId,
     scopedRecords,
     recordsState,
     refreshRecords,
     createRecord,
+    updateRecord,
     uploadRecordFile,
   } = useCareData();
   const toast = useToast();
@@ -57,15 +61,18 @@ export default function ReportsPage() {
   };
 
   const saveUploadedDocument = async (record: MedicalRecord) => {
-    const result = await createRecord({
+    const input = {
       title: record.title,
       recordType: RECORD_TYPE_TO_API[record.type],
       description: record.description || undefined,
       doctorName: record.doctor || undefined,
       hospitalName: record.hospital || undefined,
       recordDate: record.date,
-    });
-    return result;
+      familyMemberId: record.memberId,
+    };
+    return record.id
+      ? updateRecord(record.id, input)
+      : createRecord(input);
   };
 
   return (
@@ -101,7 +108,7 @@ export default function ReportsPage() {
           <div>
             <h2 className="text-sm font-bold text-ink">Add a medical document</h2>
             <p className="mt-1 max-w-2xl text-[13px] leading-5 text-mute">
-              Save a document or image as a medical record. PDF, JPEG, or PNG up to 10 MB. Files are stored but not OCR-processed or medically analyzed.
+              Save a document or image as a medical record. PDF, JPEG, or PNG up to 10 MB. Local OCR may extract text; it does not interpret medical meaning.
             </p>
           </div>
           <button type="button" className={btnPrimary} onClick={() => setUploadOpen(true)}>
@@ -157,11 +164,12 @@ export default function ReportsPage() {
                     <p className="mt-0.5 text-xs text-mute">{record.type} · {formatDate(record.date)}{record.doctor ? ` · ${record.doctor}` : ""}</p>
                     {record.description && <p className="mt-1 text-[13px] leading-5 text-body">{record.description}</p>}
                     {record.hasFile && <p className="mt-1 text-xs font-medium text-brand">Attachment available{record.fileName ? `: ${record.fileName}` : ""}</p>}
+                    {record.hasFile && <RecordOcrResult key={record.id} recordId={record.id} />}
                   </li>
                 ))}
               </ol>
             </div>
-            <p className="border-t border-line pt-4 text-xs leading-5 text-mute">This page organizes fetched record metadata only. It does not analyze test results or provide medical advice.</p>
+            <p className="border-t border-line pt-4 text-xs leading-5 text-mute">This page organizes fetched record metadata and may show text extracted from attachments. OCR is not medical interpretation or advice.</p>
           </section>
         )}
       </StaggerItem>
@@ -169,7 +177,8 @@ export default function ReportsPage() {
       <AddRecordModal
         open={uploadOpen}
         onClose={() => setUploadOpen(false)}
-        memberId={self.id}
+        memberId={activeId}
+        members={members}
         today={toISO(new Date(now))}
         record={null}
         requireAttachment

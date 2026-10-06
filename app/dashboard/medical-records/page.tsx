@@ -42,7 +42,7 @@ function RecordsView() {
   const {
     hydrated,
     now,
-    self,
+    members,
     memberById,
     scopedRecords,
     activeId,
@@ -135,6 +135,7 @@ function RecordsView() {
       doctorName: record.doctor || null,
       hospitalName: record.hospital || null,
       recordDate: record.date,
+      familyMemberId: record.memberId,
     };
     if (record.id) {
       const updated = await updateRecord(record.id, input);
@@ -148,6 +149,7 @@ function RecordsView() {
         doctorName: record.doctor || undefined,
         hospitalName: record.hospital || undefined,
         recordDate: record.date,
+        familyMemberId: record.memberId,
       });
       toast("Record added");
       return created;
@@ -295,7 +297,8 @@ function RecordsView() {
           setEditing(null);
           setParam({ add: null });
         }}
-        memberId={self.id}
+        memberId={activeId}
+        members={members}
         today={today}
         record={editing}
         onSave={saveRecord}

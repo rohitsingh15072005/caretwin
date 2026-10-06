@@ -19,6 +19,13 @@ export interface MedicalRecord {
   createdAt?: string;
   fileName?: string;
   hasFile?: boolean;
+  ocrStatus?: "queued" | "processing" | "succeeded" | "failed";
+  ocrText?: string;
+  ocrError?: string;
+  ocrConfidence?: number | null;
+  ocrNeedsReview?: boolean;
+  ocrFlags?: string[];
+  ocrQuality?: "low" | "medium" | "high" | "unscored";
 }
 
 export interface Contact {
@@ -31,6 +38,7 @@ export interface Member {
   id: string;
   name: string;
   relation: string;
+  isSelf?: boolean;
   dob: string; // ISO or ""
   gender: string;
   bloodGroup: string;
