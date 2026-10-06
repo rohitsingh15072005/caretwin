@@ -127,6 +127,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status: number,
+    public readonly details?: Array<{ field: string; message: string }>,
   ) {
     super(message);
     this.name = "ApiError";
@@ -163,7 +164,12 @@ async function request<T>(
 
   if (response.status === 204) return undefined as T;
 
-  let payload: ApiSuccess<T> | { error?: { message?: string } };
+  let payload: ApiSuccess<T> | {
+    error?: {
+      message?: string;
+      details?: Array<{ field?: unknown; message?: unknown }>;
+    };
+  };
   try {
     payload = (await response.json()) as
       | ApiSuccess<T>
@@ -176,11 +182,21 @@ async function request<T>(
   }
 
   if (!response.ok) {
+    const details = payload && "error" in payload && Array.isArray(payload.error?.details)
+      ? payload.error.details.filter(
+          (detail): detail is { field: string; message: string } =>
+            typeof detail.field === "string" && typeof detail.message === "string",
+        )
+      : [];
+    const message = payload && "error" in payload && payload.error?.message
+      ? payload.error.message
+      : `The CareTwin API request failed (HTTP ${response.status}).`;
     throw new ApiError(
-      payload && "error" in payload && payload.error?.message
-        ? payload.error.message
-        : `The CareTwin API request failed (HTTP ${response.status}).`,
+      details.length
+        ? `${message}: ${details.map(({ field, message: detailMessage }) => `${field}: ${detailMessage}`).join("; ")}`
+        : message,
       response.status,
+      details,
     );
   }
 

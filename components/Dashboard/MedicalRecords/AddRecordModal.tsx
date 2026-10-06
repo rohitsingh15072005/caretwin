@@ -94,19 +94,8 @@ function Form({
       return;
     }
     if (file) {
-      const extension = file.name.split(".").pop()?.toLowerCase();
-      const allowed = ["pdf", "jpg", "jpeg", "png"];
-      if (!extension || !allowed.includes(extension)) {
-        setError("Choose a PDF, JPEG, or PNG file.");
-        return;
-      }
       if (file.size > 10 * 1024 * 1024) {
         setError("Choose a file no larger than 10 MB.");
-        return;
-      }
-      const allowedMimeTypes = ["application/pdf", "image/jpeg", "image/png"];
-      if (file.type && !allowedMimeTypes.includes(file.type)) {
-        setError("Choose a PDF, JPEG, or PNG file.");
         return;
       }
     }
@@ -188,7 +177,7 @@ function Form({
         />
         <span className="mt-1 block text-xs font-normal text-mute">PDF, JPEG, or PNG; maximum 10 MB.</span>
       </label>
-      <p className="text-xs text-mute">OCR extracts text only; it does not interpret medical meaning. AI analysis and follow-up tracking are not available.</p>
+      <p className="text-xs text-mute">Files up to 10 MB are checked by the server for supported PDF, JPEG, or PNG content. OCR extracts text only; it does not interpret medical meaning.</p>
       {progress && <p role="status" aria-live="polite" className="text-sm font-medium text-brand">{progress}</p>}
       {error && <p role="alert" className="text-sm font-medium text-danger">{error}</p>}
       <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
