@@ -1,41 +1,44 @@
 "use client";
 
-import { FileText, Activity, Pill, Brain, ChevronRight } from "lucide-react";
+import { Activity, Brain, ChevronRight, FileText } from "lucide-react";
 import { useCareData } from "@/lib/useCareData";
 
 const prompts = [
   "Understand medical reports",
   "Explain health terms",
   "Discuss symptoms",
-  "Review health trends",
-  "Explain medications",
+  "Review health information",
 ];
 
 export default function AIChatSidebar({ onPick }: { onPick: (q: string) => void }) {
-  const { scopedRecords, members, activeId, prefs } = useCareData();
-  const member = members.find((m) => m.id === activeId);
-  const meds = member ? member.medications.length : members.reduce((n, m) => n + m.medications.length, 0);
+  const { records, recordsState, notifications, notificationsState } = useCareData();
+  const unread = notifications.filter((notification) => !notification.isRead).length;
 
   return (
     <aside className="space-y-4">
       <div className="rounded-xl border border-[#e2e6ee] bg-white p-5">
-        <h3 className="text-sm font-bold text-[#273044]">Health context</h3>
+        <h3 className="text-sm font-bold text-[#273044]">Available account data</h3>
         <p className="mt-1 text-[13px] leading-5 text-[#8b95a7]">
-          {prefs.shareWithAI
-            ? `CareTwin AI is using ${member ? `${member.name.split(" ")[0]}'s` : "your family's"} information for personalised answers.`
-            : "Sharing with the AI is off. Turn it on in Settings for personalised answers."}
+          Messages are sent to the CareTwin chat service, but your medical records are not automatically included in the conversation.
         </p>
         <div className="mt-4 space-y-2">
-          <ContextItem icon={<FileText size={15} />} title="Medical records" value={`${scopedRecords.length} documents`} />
-          <ContextItem icon={<Activity size={15} />} title="Follow-ups" value={`${scopedRecords.filter((r) => r.followUp).length} open`} />
-          <ContextItem icon={<Pill size={15} />} title="Medications" value={`${meds} active`} />
+          <ContextItem
+            icon={<FileText size={15} />}
+            title="Medical records"
+            value={recordsState.status === "loading" ? "Loading…" : recordsState.status === "error" ? "Unavailable" : `${records.length} records`}
+          />
+          <ContextItem
+            icon={<Activity size={15} />}
+            title="Unread notifications"
+            value={notificationsState.status === "loading" ? "Loading…" : notificationsState.status === "error" ? "Unavailable" : `${unread}`}
+          />
         </div>
       </div>
 
       <div className="rounded-xl border border-[#e2e6ee] bg-white p-5">
         <div className="flex items-center gap-2">
           <Brain size={16} className="text-brand" />
-          <h3 className="text-sm font-bold text-[#273044]">What I can help with</h3>
+          <h3 className="text-sm font-bold text-[#273044]">Suggested topics</h3>
         </div>
         <div className="mt-4 space-y-2">
           {prompts.map((item) => (

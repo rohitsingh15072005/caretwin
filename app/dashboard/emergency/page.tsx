@@ -10,7 +10,7 @@ import EmergencyIdCard from "@/components/Dashboard/Emergency/EmergencyIdCard";
 import { Toggle, btnGhost, btnPrimary } from "@/components/ui/Field";
 import { useToast } from "@/components/ui/Toast";
 import { Stagger, StaggerItem } from "@/components/ui/Motion";
-import { useCareData, ALL_ID } from "@/lib/useCareData";
+import { useCareData } from "@/lib/useCareData";
 import {
   DEFAULT_FIELDS,
   buildPayload,
@@ -21,25 +21,17 @@ import {
 import { downloadQrPng, downloadQrSvg, makeQr } from "@/lib/qr";
 import { slug } from "@/lib/download";
 
-const FIELD_LABELS: { key: keyof EmergencyFields; label: string; hint?: string }[] = [
-  { key: "bloodGroup", label: "Blood group" },
-  { key: "allergies", label: "Allergies" },
-  { key: "conditions", label: "Medical conditions" },
-  { key: "medications", label: "Current medications" },
-  { key: "contacts", label: "Emergency contacts" },
+const FIELD_LABELS: { key: keyof EmergencyFields; label: string }[] = [
   { key: "age", label: "Age" },
-  { key: "doctor", label: "Primary doctor" },
-  { key: "organDonor", label: "Organ donor status" },
-  { key: "insurance", label: "Insurance number", hint: "Sensitive. Share only if needed." },
 ];
 
 export default function EmergencyPage() {
   const toast = useToast();
-  const { hydrated, now, members, activeId, self } = useCareData();
+  const { hydrated, now, self, profileState } = useCareData();
   const [fields, setFields] = useState<EmergencyFields>(DEFAULT_FIELDS);
   const [mode, setMode] = useState<"link" | "text">("link");
 
-  const member = (activeId !== ALL_ID && members.find((m) => m.id === activeId)) || self;
+  const member = self;
   const payload = useMemo(() => buildPayload(member, fields, now), [member, fields, now]);
 
   const origin = hydrated ? window.location.origin : "";
@@ -73,20 +65,26 @@ export default function EmergencyPage() {
         <PageHeader
           icon={<QrCode size={22} />}
           title="Emergency QR"
-          subtitle="Create a card that shows responders your blood group, allergies and contacts. Print it, or save the QR on your phone's lock screen."
+          subtitle="Create a QR card with the account details available to CareTwin. Medical details and emergency contacts are not supported by the connected profile API."
         />
       </StaggerItem>
 
       <StaggerItem>
-        <MemberTabs includeAll={false} />
+        <MemberTabs />
       </StaggerItem>
 
       <StaggerItem>
+        {profileState.status === "error" && (
+          <div role="alert" className="rounded-lg border border-[#f3b5b5] bg-white px-4 py-3 text-sm text-danger">
+            Could not load your profile, so the QR preview contains no account details. {profileState.error}
+          </div>
+        )}
         <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
           {/* Controls */}
           <div className="no-print space-y-5">
             <section className="rounded-xl border border-line bg-white p-5">
               <h2 className="text-sm font-bold text-ink">What should the card show?</h2>
+              <p className="mt-1 text-[13px] leading-5 text-mute">Only your name and, if available, age can currently be populated from your profile.</p>
               <div className="mt-1 divide-y divide-[#f0f2f6]">
                 {FIELD_LABELS.map((f) => (
                   <Toggle
@@ -94,7 +92,6 @@ export default function EmergencyPage() {
                     checked={fields[f.key]}
                     onChange={(v) => setFields({ ...fields, [f.key]: v })}
                     label={f.label}
-                    description={f.hint}
                   />
                 ))}
               </div>
@@ -143,7 +140,7 @@ export default function EmergencyPage() {
               <div className="no-print flex gap-3 rounded-xl border border-[#f0dfc1] bg-[#fffaf0] p-4 text-[13px] text-[#7a5c1f]">
                 <TriangleAlert size={18} className="mt-0.5 shrink-0" />
                 <p>
-                  Nothing useful is selected, or {member.name.split(" ")[0]}&apos;s profile is empty. Add details in the Family page, then turn fields on.
+                  No optional profile details are available to include. CareTwin currently only provides your account name and date of birth for this card.
                 </p>
               </div>
             )}

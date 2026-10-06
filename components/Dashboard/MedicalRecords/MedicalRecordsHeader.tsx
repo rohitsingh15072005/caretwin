@@ -9,7 +9,7 @@ export default function MedicalRecordsHeader({ onAdd }: { onAdd: () => void }) {
     <PageHeader
       icon={<FileText size={22} />}
       title="Medical Records"
-      subtitle="Manage and analyze your family's health history with AI-powered insights."
+      subtitle="View and manage medical records fetched from your CareTwin account."
       actions={
         <button type="button" onClick={onAdd} className={btnPrimary}>
           <UploadCloud size={16} />

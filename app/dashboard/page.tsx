@@ -2,7 +2,6 @@ import WelcomeBanner from "@/components/Dashboard/Welcomebanner";
 import UploadReport from "@/components/Dashboard/UploadReport";
 import StartAIChat from "@/components/Dashboard/StartAIChat";
 import SymptomCheckerCard from "@/components/Dashboard/SymptomChecker/SymptomCheckerCard";
-import EmergencyCard from "@/components/Dashboard/EmergencyCard";
 import HealthSummary from "@/components/Dashboard/HealthSummary";
 import RecentActivity from "@/components/Dashboard/RecentActivity";
 import FamilySnapshot from "@/components/Dashboard/FamilySnapshot";
@@ -22,7 +21,6 @@ export default function DashboardPage() {
           <UploadReport />
           <StartAIChat />
           <SymptomCheckerCard />
-          <EmergencyCard />
         </section>
       </StaggerItem>
 

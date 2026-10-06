@@ -14,7 +14,7 @@ export default function AIChatCard() {
       </div>
       <h3 className="text-[15px] font-semibold">Start AI Chat</h3>
       <p className="mt-1 text-[13px] leading-5 text-blue-100">
-        Ask about your health trends and medical records.
+        Send a message to the connected CareTwin chat service.
       </p>
       <div className="mt-4 flex items-center gap-1 text-[13px] font-semibold">
         <span>Start chat</span>

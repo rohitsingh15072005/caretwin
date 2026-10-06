@@ -12,6 +12,88 @@ export type AuthUser = {
   lastName: string | null;
 };
 
+export type CareUser = AuthUser & {
+  emailVerifiedAt: string | null;
+  phone: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  createdAt: string;
+};
+
+export type ApiRecord = {
+  id: string;
+  title: string;
+  recordType: string;
+  description: string | null;
+  fileName: string | null;
+  doctorName: string | null;
+  hospitalName: string | null;
+  recordDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  hasFile: boolean;
+};
+
+export type DashboardSummary = {
+  greeting: { firstName: string | null };
+  profile: { percent: number; missing: string[] };
+  counts: {
+    unreadNotifications: number;
+    medicalRecords: number;
+    symptomChecks: number;
+    openSupportTickets: number;
+  };
+  recentRecords: Array<{
+    id: string;
+    title: string;
+    recordType: string;
+    recordDate: string | null;
+    createdAt: string;
+  }>;
+  recentSymptomChecks: Array<{
+    id: string;
+    severity: string;
+    recommendedSpecialty: string | null;
+    createdAt: string;
+  }>;
+};
+
+export type ApiNotification = {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  isRead: boolean;
+  createdAt: string;
+};
+
+export type ApiChatSummary = {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ApiChatMessage = {
+  id: string;
+  sender: "user" | "assistant";
+  message: string;
+  createdAt: string;
+};
+
+export type ApiChat = ApiChatSummary & { messages: ApiChatMessage[] };
+
+export type ApiSymptom = { id: string; label: string };
+
+export type ApiSymptomCheck = {
+  id: string;
+  symptoms: string[];
+  severity: string;
+  urgency: string;
+  recommendedSpecialty: string | null;
+  createdAt: string;
+};
+
 type LoginResponse = {
   user: AuthUser;
   accessToken: string;
@@ -176,4 +258,134 @@ export async function logout() {
   } finally {
     accessToken = null;
   }
+}
+
+export async function getCurrentUser() {
+  return apiFetch<{ user: CareUser }>("/users/me");
+}
+
+export async function updateCurrentUser(
+  input: Partial<Pick<CareUser, "firstName" | "lastName" | "phone" | "dateOfBirth" | "gender">>,
+) {
+  return apiFetch<{ user: CareUser }>("/users/me", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function listRecords() {
+  const items: ApiRecord[] = [];
+  let cursor: string | null = null;
+
+  do {
+    const query = new URLSearchParams({ limit: "50" });
+    if (cursor) query.set("cursor", cursor);
+    const page = await apiFetch<{ items: ApiRecord[]; nextCursor: string | null }>(
+      `/records?${query.toString()}`,
+    );
+    items.push(...page.items);
+    cursor = page.nextCursor;
+  } while (cursor);
+
+  return { items, nextCursor: null };
+}
+
+export async function createRecord(
+  input: {
+    title: string;
+    recordType: string;
+    description?: string;
+    doctorName?: string;
+    hospitalName?: string;
+    recordDate?: string;
+  },
+) {
+  return apiFetch<{ record: ApiRecord }>("/records", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateRecord(
+  id: string,
+  input: {
+    title?: string;
+    recordType?: string;
+    description?: string | null;
+    doctorName?: string | null;
+    hospitalName?: string | null;
+    recordDate?: string | null;
+  },
+) {
+  return apiFetch<{ record: ApiRecord }>(`/records/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteRecord(id: string) {
+  return apiFetch<void>(`/records/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export async function getDashboardSummary() {
+  return apiFetch<DashboardSummary>("/dashboard");
+}
+
+export async function listNotifications() {
+  return apiFetch<{ items: ApiNotification[]; nextCursor: string | null }>("/notifications?limit=50");
+}
+
+export async function markNotificationRead(id: string) {
+  return apiFetch<{ message: string }>(`/notifications/${encodeURIComponent(id)}/read`, {
+    method: "PATCH",
+  });
+}
+
+export async function markAllNotificationsRead() {
+  return apiFetch<{ updated: number }>("/notifications/read-all", { method: "POST" });
+}
+
+export async function listChats() {
+  return apiFetch<{ items: ApiChatSummary[]; nextCursor: string | null }>("/chats?limit=50");
+}
+
+export async function createChat(title?: string) {
+  return apiFetch<{ chat: ApiChatSummary }>("/chats", {
+    method: "POST",
+    body: JSON.stringify(title ? { title } : {}),
+  });
+}
+
+export async function getChat(id: string) {
+  return apiFetch<{ chat: ApiChat }>(`/chats/${encodeURIComponent(id)}`);
+}
+
+export async function sendChatMessage(id: string, message: string) {
+  return apiFetch<{
+    userMessage: ApiChatMessage;
+    assistantMessage: ApiChatMessage;
+    emergency: { id: string; kind: string } | null;
+  }>(`/chats/${encodeURIComponent(id)}/messages`, {
+    method: "POST",
+    body: JSON.stringify({ message }),
+  });
+}
+
+export async function listSymptomVocabulary() {
+  return apiFetch<{ symptoms: ApiSymptom[] }>("/symptoms/vocabulary");
+}
+
+export async function createSymptomCheck(input: {
+  symptoms: string[];
+  severity: "low" | "medium" | "high";
+  durationDays: number;
+}) {
+  return apiFetch<{ result: ApiSymptomCheck }>("/symptoms/check", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function listSymptomHistory() {
+  return apiFetch<{ items: ApiSymptomCheck[]; nextCursor: string | null }>("/symptoms/history?limit=50");
 }

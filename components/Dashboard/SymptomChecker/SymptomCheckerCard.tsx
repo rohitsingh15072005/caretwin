@@ -14,7 +14,7 @@ export default function SymptomCheckerCard() {
       </div>
       <h3 className="text-[15px] font-semibold">Symptom Checker</h3>
       <p className="mt-1 text-[13px] leading-5 text-[#256b49]">
-        Check new symptoms against your medical history.
+        Submit symptoms for a CareTwin service response.
       </p>
       <div className="mt-4 flex items-center gap-1 text-[13px] font-semibold">
         <span>Check symptoms</span>

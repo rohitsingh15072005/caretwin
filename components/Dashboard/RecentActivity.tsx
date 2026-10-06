@@ -6,7 +6,7 @@ import { useCareData } from "@/lib/useCareData";
 import { relativeDays } from "@/lib/dates";
 
 export default function RecentActivity() {
-  const { records, memberById, now, hydrated } = useCareData();
+  const { records, memberById, now, recordsState, refreshRecords } = useCareData();
   const recent = [...records].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
 
   return (
@@ -18,11 +18,18 @@ export default function RecentActivity() {
         </Link>
       </div>
 
-      {!hydrated ? (
+      {recordsState.status === "loading" ? (
         <div className="space-y-2">
           {[0, 1, 2].map((i) => (
             <div key={i} className="ct-skeleton h-12 rounded-lg" />
           ))}
+        </div>
+      ) : recordsState.status === "error" ? (
+        <div role="alert" className="py-4 text-center text-sm text-danger">
+          <p>{recordsState.error}</p>
+          <button type="button" onClick={() => void refreshRecords()} className="mt-2 font-semibold underline">
+            Retry
+          </button>
         </div>
       ) : recent.length === 0 ? (
         <p className="py-6 text-center text-sm text-mute">No records yet. Add your first report.</p>
@@ -36,7 +43,7 @@ export default function RecentActivity() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-ink">{r.title}</p>
                 <p className="truncate text-xs text-mute">
-                  {memberById.get(r.memberId)?.name} · {r.type}
+                  {memberById.get(r.memberId)?.name || "You"} · {r.type}
                 </p>
               </div>
               <span className="shrink-0 text-xs text-mute">{relativeDays(r.date, now)}</span>
